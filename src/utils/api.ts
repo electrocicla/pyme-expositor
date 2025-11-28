@@ -91,7 +91,7 @@ export const api = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getProtectedMedia(): Promise<any> {
-    return api.get<any>('/media/protected')
+    return api.get<any>('/protected/media')
   },
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
