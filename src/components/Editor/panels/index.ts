@@ -17,6 +17,7 @@ export { ThemePanel } from './ThemePanel';
 export { GalleryPanel } from './GalleryPanel';
 export { HeaderPanel } from './HeaderPanel';
 export { FooterPanel } from './FooterPanel';
+export { MediaPanel } from './MediaPanel';
 
 // Shared Components & Utilities
 export { MediaSelector } from './MediaSelector';
