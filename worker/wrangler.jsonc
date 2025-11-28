@@ -21,9 +21,8 @@
     {
       "binding": "expositor_db",
       "database_name": "expositor-db",
-      "database_id": "40be56e7-8ade-4746-9b70-2fec6bb1a244",
-      "remote": true,
-      "preview_database_id": "fdafc6d1-c39c-4386-85eb-076bf0d5a3f8"
+      "database_id": "fdafc6d1-c39c-4386-85eb-076bf0d5a3f8",
+      "preview_database_id": "40be56e7-8ade-4746-9b70-2fec6bb1a244"
     }
   ],
   

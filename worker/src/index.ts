@@ -314,11 +314,11 @@ app.get('/api/config', async (c) => {
     const db = c.env.expositor_db
     // Try to get published config first (for public landing page)
     const result = await db.prepare(
-      "SELECT value FROM site_config WHERE key = 'published'"
-    ).first<{ value: string }>()
+      "SELECT config FROM site_config WHERE key = 'published'"
+    ).first<{ config: string }>()
     
-    if (result?.value) {
-      return c.json(JSON.parse(result.value))
+    if (result?.config) {
+      return c.json(JSON.parse(result.config))
     }
     
     // Return default config if no published config exists
@@ -336,12 +336,12 @@ app.get('/api/config/:key', async (c) => {
     
     // Fetch config by key (draft or published)
     const result = await db.prepare(
-      "SELECT value FROM site_config WHERE key = ?"
-    ).bind(key).first<{ value: string }>()
+      "SELECT config FROM site_config WHERE key = ?"
+    ).bind(key).first<{ config: string }>()
     
-    if (result?.value) {
-      console.log(`Config loaded for key '${key}':`, result.value.substring(0, 200) + '...')
-      return c.json(JSON.parse(result.value))
+    if (result?.config) {
+      console.log(`Config loaded for key '${key}':`, result.config.substring(0, 200) + '...')
+      return c.json(JSON.parse(result.config))
     }
     
     // Return default config if none exists
@@ -370,18 +370,28 @@ app.post('/api/config', async (c) => {
     const db = c.env.expositor_db
     const configJson = JSON.stringify(body)
     
-    // Upsert draft config
-    await db.prepare(`
-      INSERT INTO site_config (key, value, updated_at) 
-      VALUES ('draft', ?, datetime('now'))
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
-    `).bind(configJson).run()
+    // Check if draft exists
+    const existing = await db.prepare(
+      "SELECT id FROM site_config WHERE key = 'draft'"
+    ).first<{ id: number }>()
+    
+    if (existing) {
+      // Update existing draft
+      await db.prepare(
+        "UPDATE site_config SET config = ?, updated_at = datetime('now') WHERE key = 'draft'"
+      ).bind(configJson).run()
+    } else {
+      // Insert new draft
+      await db.prepare(
+        "INSERT INTO site_config (key, config, updated_at) VALUES ('draft', ?, datetime('now'))"
+      ).bind(configJson).run()
+    }
     
     console.log('Draft config saved successfully')
     return c.json({ success: true, message: 'Config saved' })
   } catch (error) {
     console.error('Error saving config:', error)
-    return c.json({ error: 'Failed to save config' }, 500)
+    return c.json({ error: 'Failed to save config', details: String(error) }, 500)
   }
 })
 
@@ -402,19 +412,29 @@ app.post('/api/config/publish', async (c) => {
     
     // Get the draft config
     const draft = await db.prepare(
-      "SELECT value FROM site_config WHERE key = 'draft'"
-    ).first<{ value: string }>()
+      "SELECT config FROM site_config WHERE key = 'draft'"
+    ).first<{ config: string }>()
     
-    if (!draft?.value) {
+    if (!draft?.config) {
       return c.json({ error: 'No draft config to publish' }, 400)
     }
     
-    // Copy draft to published
-    await db.prepare(`
-      INSERT INTO site_config (key, value, updated_at) 
-      VALUES ('published', ?, datetime('now'))
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
-    `).bind(draft.value).run()
+    // Check if published exists
+    const existingPublished = await db.prepare(
+      "SELECT id FROM site_config WHERE key = 'published'"
+    ).first<{ id: number }>()
+    
+    if (existingPublished) {
+      // Update existing published
+      await db.prepare(
+        "UPDATE site_config SET config = ?, updated_at = datetime('now') WHERE key = 'published'"
+      ).bind(draft.config).run()
+    } else {
+      // Insert new published
+      await db.prepare(
+        "INSERT INTO site_config (key, config, updated_at) VALUES ('published', ?, datetime('now'))"
+      ).bind(draft.config).run()
+    }
     
     console.log('Config published successfully')
     return c.json({ success: true, message: 'Config published' })
