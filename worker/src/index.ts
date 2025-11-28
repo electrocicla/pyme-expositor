@@ -73,18 +73,23 @@ const verifyToken = (token: string, secret: string): boolean => {
 }
 
 // Middleware for protected routes
-const authMiddleware = (c: any, next: any) => {
+const authMiddleware = async (c: any, next: any) => {
   const auth = c.req.header('Authorization')
+  console.log('Auth header:', auth ? 'Present' : 'Missing')
+  
   if (!auth || !auth.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized' }, 401)
+    console.log('No Bearer token found')
+    return c.json({ error: 'Unauthorized: No Bearer token' }, 401)
   }
 
   const token = auth.substring(7)
   if (!verifyToken(token, c.env.JWT_SECRET)) {
+    console.log('Token verification failed')
     return c.json({ error: 'Invalid or expired token' }, 401)
   }
 
-  return next()
+  console.log('Auth middleware passed')
+  await next()
 }
 
 // Public Routes
@@ -121,42 +126,27 @@ app.post('/api/login', async (c) => {
 })
 
 // Protected Routes
+app.use('/api/protected/*', authMiddleware)
+
 app.get('/api/protected/media', async (c) => {
   try {
-    const auth = c.req.header('Authorization')
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
-      return c.json({ error: 'Invalid or expired token' }, 401)
-    }
-
+    console.log('GET /api/protected/media called')
     const db = c.env.expositor_db
     const result = await db
       .prepare('SELECT * FROM media ORDER BY order_index ASC')
       .all<MediaRow>()
 
+    console.log('Returned media:', result.results?.length || 0, 'items')
     return c.json(result.results || [])
   } catch (error) {
     console.error('Error fetching protected media:', error)
-    return c.json({ error: 'Failed to fetch media' }, 500)
+    return c.json({ error: 'Failed to fetch media', details: String(error) }, 500)
   }
 })
 
 app.post('/api/protected/media', async (c) => {
   try {
-    const auth = c.req.header('Authorization')
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
-      return c.json({ error: 'Invalid or expired token' }, 401)
-    }
-
+    console.log('POST /api/protected/media called')
     const formData = await c.req.formData()
     const file = formData.get('file') as File | null
     const title = formData.get('title') as string | null
@@ -199,16 +189,7 @@ app.post('/api/protected/media', async (c) => {
 
 app.put('/api/protected/media/:id', async (c) => {
   try {
-    const auth = c.req.header('Authorization')
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
-      return c.json({ error: 'Invalid or expired token' }, 401)
-    }
-
+    console.log('PUT /api/protected/media/:id called')
     const id = c.req.param('id')
     const body = await c.req.json() as UpdatePayload
 
@@ -255,16 +236,7 @@ app.put('/api/protected/media/:id', async (c) => {
 
 app.delete('/api/protected/media/:id', async (c) => {
   try {
-    const auth = c.req.header('Authorization')
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
-      return c.json({ error: 'Invalid or expired token' }, 401)
-    }
-
+    console.log('DELETE /api/protected/media/:id called')
     const id = c.req.param('id')
     const db = c.env.expositor_db
 

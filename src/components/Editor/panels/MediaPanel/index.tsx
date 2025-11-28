@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react'
 import { Upload, Trash2, AlertCircle } from 'lucide-react'
 import { PanelHeader } from '../shared'
+import { getAuthToken, API_BASE_URL } from '../../../../utils/api'
 
 interface MediaFile {
-  id: string
+  id: number
   title: string
   description: string
   url: string
   type: 'image' | 'video'
-  size: number
+  created_at?: string
 }
 
 export const MediaPanel: React.FC = () => {
@@ -25,7 +26,11 @@ export const MediaPanel: React.FC = () => {
     setError(null)
 
     try {
-      const token = localStorage.getItem('auth-token')
+      const token = getAuthToken()
+      if (!token) {
+        setError('Not authenticated. Please log in again.')
+        return
+      }
       
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i]
@@ -34,7 +39,7 @@ export const MediaPanel: React.FC = () => {
         formData.append('title', file.name.replace(/\.[^/.]+$/, ''))
         formData.append('description', `Uploaded: ${new Date().toLocaleDateString()}`)
 
-        const response = await fetch('https://pyme-expositor-worker.electrocicla.workers.dev/api/protected/media', {
+        const response = await fetch(`${API_BASE_URL}/protected/media`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -43,7 +48,8 @@ export const MediaPanel: React.FC = () => {
         })
 
         if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`)
+          const errorData = await response.json()
+          throw new Error(errorData.error || `Upload failed: ${response.statusText}`)
         }
       }
 
@@ -61,8 +67,13 @@ export const MediaPanel: React.FC = () => {
 
   const loadFiles = async () => {
     try {
-      const token = localStorage.getItem('auth-token')
-      const response = await fetch('https://pyme-expositor-worker.electrocicla.workers.dev/api/protected/media', {
+      const token = getAuthToken()
+      if (!token) {
+        console.warn('No auth token available')
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/protected/media`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -71,18 +82,26 @@ export const MediaPanel: React.FC = () => {
       if (response.ok) {
         const data = await response.json()
         setFiles(data)
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to load files:', errorData)
       }
     } catch (err) {
       console.error('Failed to load files:', err)
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this file?')) return
 
     try {
-      const token = localStorage.getItem('auth-token')
-      const response = await fetch(`https://pyme-expositor-worker.electrocicla.workers.dev/api/protected/media/${id}`, {
+      const token = getAuthToken()
+      if (!token) {
+        setError('Not authenticated. Please log in again.')
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/protected/media/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +111,8 @@ export const MediaPanel: React.FC = () => {
       if (response.ok) {
         setFiles(files.filter(f => f.id !== id))
       } else {
-        setError('Failed to delete file')
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to delete file')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed')
@@ -145,7 +165,7 @@ export const MediaPanel: React.FC = () => {
               <div key={file.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-slate-600/50 transition-colors">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-200 truncate">{file.title}</p>
-                  <p className="text-xs text-slate-400 mt-1">{file.type} • {(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-xs text-slate-400 mt-1">{file.type}</p>
                 </div>
                 <button
                   onClick={() => handleDelete(file.id)}
