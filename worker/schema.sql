@@ -17,8 +17,16 @@ CREATE TABLE IF NOT EXISTS media (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS site_config (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT UNIQUE NOT NULL,
+  value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_media_order ON media(order_index);
 CREATE INDEX IF NOT EXISTS idx_media_created ON media(created_at);
+CREATE INDEX IF NOT EXISTS idx_config_key ON site_config(key);
 
 INSERT OR IGNORE INTO users (username, password_hash) 
 VALUES ('owner', 'secretpassword');

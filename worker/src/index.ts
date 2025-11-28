@@ -268,47 +268,116 @@ app.get('/health', (c) => {
   return c.json({ status: 'healthy' })
 })
 
-// Config endpoints for the editor
+// Default config template (used when no config exists)
+const defaultConfigTemplate = {
+  theme: {
+    primaryColor: '#3b82f6',
+    secondaryColor: '#1e293b',
+    fontFamily: 'Inter',
+    borderRadius: '0.5rem',
+    mode: 'dark'
+  },
+  header: {
+    enabled: true,
+    navLinkStyle: 'none',
+    navLinks: [],
+    logo: { enabled: true, url: '' }
+  },
+  hero: {
+    enabled: true,
+    title: 'Showcase Your Creative Work',
+    subtitle: 'Discover and explore a curated collection of stunning images and videos.',
+    ctaText: 'Explore Media',
+    ctaLink: '#gallery'
+  },
+  gallery: {
+    enabled: true,
+    title: 'Featured Media',
+    subtitle: 'Explore our latest collection of high-quality images and videos'
+  },
+  footer: {
+    enabled: true,
+    copyright: '© 2024 Your Brand. All rights reserved.'
+  },
+  effects: {
+    cursor: { enabled: false, type: 'default' },
+    background: { enabled: false, type: 'none', speed: 1, intensity: 0.5 },
+    cards: { animation: 'none', hover: 'none' },
+    animations: { enabled: true, pageTransitions: true },
+    particles: { enabled: false }
+  }
+}
+
+// Config endpoints for the editor - Now with D1 storage
 app.get('/api/config', async (c) => {
   try {
-    // For now, return a default config
-    // In a real app, this would fetch from D1
-    return c.json({
-      theme: {
-        primaryColor: '#3b82f6',
-        secondaryColor: '#1e293b',
-        fontFamily: 'Inter',
-        borderRadius: '0.5rem',
-        mode: 'dark'
-      },
-      header: {
-        enabled: true,
-        navLinkStyle: 'none',
-        navLinks: []
-      }
-    })
+    const db = c.env.expositor_db
+    // Try to get published config first (for public landing page)
+    const result = await db.prepare(
+      "SELECT value FROM site_config WHERE key = 'published'"
+    ).first<{ value: string }>()
+    
+    if (result?.value) {
+      return c.json(JSON.parse(result.value))
+    }
+    
+    // Return default config if no published config exists
+    return c.json(defaultConfigTemplate)
   } catch (error) {
     console.error('Error fetching config:', error)
-    return c.json({ error: 'Failed to fetch config' }, 500)
+    return c.json(defaultConfigTemplate)
   }
 })
 
 app.get('/api/config/:key', async (c) => {
   try {
     const key = c.req.param('key')
-    // Return config for specific key
-    return c.json({ [key]: {} })
+    const db = c.env.expositor_db
+    
+    // Fetch config by key (draft or published)
+    const result = await db.prepare(
+      "SELECT value FROM site_config WHERE key = ?"
+    ).bind(key).first<{ value: string }>()
+    
+    if (result?.value) {
+      console.log(`Config loaded for key '${key}':`, result.value.substring(0, 200) + '...')
+      return c.json(JSON.parse(result.value))
+    }
+    
+    // Return default config if none exists
+    console.log(`No config found for key '${key}', returning default`)
+    return c.json(defaultConfigTemplate)
   } catch (error) {
     console.error('Error fetching config key:', error)
-    return c.json({ error: 'Failed to fetch config' }, 500)
+    return c.json(defaultConfigTemplate)
   }
 })
 
+// Protected config save endpoint
 app.post('/api/config', async (c) => {
   try {
+    // Check auth
+    const auth = c.req.header('Authorization')
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const token = auth.substring(7)
+    if (!verifyToken(token, c.env.JWT_SECRET)) {
+      return c.json({ error: 'Invalid or expired token' }, 401)
+    }
+
     const body = await c.req.json()
-    // Save config to D1 or environment
-    console.log('Config saved:', body)
+    const db = c.env.expositor_db
+    const configJson = JSON.stringify(body)
+    
+    // Upsert draft config
+    await db.prepare(`
+      INSERT INTO site_config (key, value, updated_at) 
+      VALUES ('draft', ?, datetime('now'))
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+    `).bind(configJson).run()
+    
+    console.log('Draft config saved successfully')
     return c.json({ success: true, message: 'Config saved' })
   } catch (error) {
     console.error('Error saving config:', error)
@@ -316,9 +385,38 @@ app.post('/api/config', async (c) => {
   }
 })
 
+// Protected publish endpoint - copies draft to published
 app.post('/api/config/publish', async (c) => {
   try {
-    // Publish config (make it live)
+    // Check auth
+    const auth = c.req.header('Authorization')
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const token = auth.substring(7)
+    if (!verifyToken(token, c.env.JWT_SECRET)) {
+      return c.json({ error: 'Invalid or expired token' }, 401)
+    }
+
+    const db = c.env.expositor_db
+    
+    // Get the draft config
+    const draft = await db.prepare(
+      "SELECT value FROM site_config WHERE key = 'draft'"
+    ).first<{ value: string }>()
+    
+    if (!draft?.value) {
+      return c.json({ error: 'No draft config to publish' }, 400)
+    }
+    
+    // Copy draft to published
+    await db.prepare(`
+      INSERT INTO site_config (key, value, updated_at) 
+      VALUES ('published', ?, datetime('now'))
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+    `).bind(draft.value).run()
+    
+    console.log('Config published successfully')
     return c.json({ success: true, message: 'Config published' })
   } catch (error) {
     console.error('Error publishing config:', error)
