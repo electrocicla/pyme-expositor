@@ -41,7 +41,13 @@ const app = new Hono<{ Bindings: Env }>()
 
 // CORS middleware
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://pyme-expositor.pages.dev',
+    'https://master.pyme-expositor.pages.dev',
+    'https://production-ready-eslint-fixe.pyme-expositor.pages.dev'
+  ],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

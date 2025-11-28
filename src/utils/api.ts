@@ -1,4 +1,8 @@
-export const API_BASE_URL = '/api'
+const API_WORKER_URL = 'https://pyme-expositor-worker.electrocicla.workers.dev'
+
+export const API_BASE_URL = import.meta.env.DEV 
+  ? '/api'
+  : `${API_WORKER_URL}/api`
 
 export interface ApiMedia {
   id: string
