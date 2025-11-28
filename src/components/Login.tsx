@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTheme } from './ThemeProvider'
+import { api, setAuthToken } from '../utils/api'
 
 const Login = () => {
   const [password, setPassword] = useState('')
@@ -15,21 +16,17 @@ const Login = () => {
     setError('')
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        localStorage.setItem('token', data.token)
-        navigate('/dashboard')
+      const data = await api.post<{ token: string }>('/login', { password })
+      if (data.token) {
+        setAuthToken(data.token)
+        localStorage.setItem('auth-token', data.token)
+        navigate('/editor')
       } else {
-        setError('Invalid password. Please try again.')
+        setError('Invalid response from server.')
       }
     } catch (err) {
-      setError('Failed to connect. Please try again.')
+      setError('Invalid password. Please try again.')
+      console.error('Login error:', err)
     } finally {
       setIsLoading(false)
     }
