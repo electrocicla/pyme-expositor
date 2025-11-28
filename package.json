@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "pnpm typecheck && pnpm build && xcopy /E /I /Y dist\\* worker\\public\\ && cd worker && pnpm run deploy"
+    "deploy:pages": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor",
+    "deploy:worker": "cd worker && pnpm run deploy",
+    "deploy": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor && cd worker && pnpm run deploy"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
