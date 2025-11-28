@@ -1,0 +1,56 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pyme-expositor-worker",
+  "type": "service",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-14",
+  "compatibility_flags": [
+    "global_fetch_strictly_public",
+    "nodejs_compat_v2"
+  ],
+  
+  "assets": {
+    "directory": "./public"
+  },
+  
+  "observability": {
+    "enabled": true
+  },
+  
+  "d1_databases": [
+    {
+      "binding": "expositor_db",
+      "database_name": "expositor-db",
+      "database_id": "40be56e7-8ade-4746-9b70-2fec6bb1a244",
+      "remote": true,
+      "preview_database_id": "fdafc6d1-c39c-4386-85eb-076bf0d5a3f8"
+    }
+  ],
+  
+  "r2_buckets": [
+    {
+      "bucket_name": "expositor-storage",
+      "binding": "expositor_storage",
+      "remote": true
+    }
+  ],
+  
+  "vars": {
+    "JWT_SECRET": "mysecretkey",
+    "ENVIRONMENT": "production"
+  },
+  
+  "env": {
+    "production": {
+      "routes": [
+        {
+          "pattern": "example.com/*",
+          "zone_name": "example.com"
+        }
+      ]
+    },
+    "development": {
+      "routes": []
+    }
+  }
+}
