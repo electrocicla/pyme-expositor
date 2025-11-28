@@ -1,5 +1,15 @@
 export const API_BASE_URL = '/api'
 
+export interface ApiMedia {
+  id: string
+  title: string
+  description?: string
+  url: string
+  type: 'image' | 'video'
+  category_id?: string
+  tags?: string[]
+}
+
 export const createHeaders = (token?: string): Record<string, string> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -12,8 +22,8 @@ export const createHeaders = (token?: string): Record<string, string> => {
   return headers
 }
 
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem('auth-token')
+export const getAuthToken = (): string | undefined => {
+  return localStorage.getItem('auth-token') ?? undefined
 }
 
 export const setAuthToken = (token: string): void => {
@@ -22,6 +32,78 @@ export const setAuthToken = (token: string): void => {
 
 export const removeAuthToken = (): void => {
   localStorage.removeItem('auth-token')
+}
+
+// API client methods
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const api = {
+  async get<T>(path: string): Promise<T> {
+    const token = getAuthToken()
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      headers: createHeaders(token),
+    })
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+    return res.json()
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async post<T>(path: string, data: any): Promise<T> {
+    const token = getAuthToken()
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+    return res.json()
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async put<T>(path: string, data: any): Promise<T> {
+    const token = getAuthToken()
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'PUT',
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+    return res.json()
+  },
+
+  async delete<T>(path: string): Promise<T> {
+    const token = getAuthToken()
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers: createHeaders(token),
+    })
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+    return res.json()
+  },
+
+  // Convenience methods
+  getMedia(): Promise<ApiMedia[]> {
+    return api.get<ApiMedia[]>('/media')
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getProtectedMedia(): Promise<any> {
+    return api.get<any>('/media/protected')
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getConfig(key?: string): Promise<Record<string, unknown>> {
+    const path = key ? `/config/${key}` : '/config'
+    return api.get<Record<string, unknown>>(path)
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  saveConfig(config: any): Promise<void> {
+    return api.post<void>('/config', config)
+  },
+
+  publishConfig(): Promise<void> {
+    return api.post<void>('/config/publish', {})
+  },
 }
 
 export const formatFileSize = (bytes: number): string => {

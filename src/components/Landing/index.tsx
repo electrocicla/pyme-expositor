@@ -10,7 +10,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ConfigProvider, useConfig } from '../../contexts/ConfigContext';
-import { api } from '../../utils/api';
+import { api, type ApiMedia } from '../../utils/api';
 import { loadGoogleFont } from '../../utils/fonts';
 
 // Hooks
@@ -36,16 +36,6 @@ import GradientOrbsBackground from '../ReactBits/GradientOrbsBackground';
 import GeometricBackground from '../ReactBits/GeometricBackground';
 import NoiseBackground from '../ReactBits/NoiseBackground';
 import { lightenColor } from '../../utils/colors';
-
-interface Media {
-  id: number;
-  title: string;
-  description: string;
-  url: string;
-  type: string;
-  category_id?: number;
-  tags?: string;
-}
 
 /**
  * Full-screen loading component
@@ -87,7 +77,7 @@ const LoadingScreen: React.FC = () => {
  * Inner landing content component
  */
 const LandingContent: React.FC = () => {
-  const [media, setMedia] = useState<Media[]>([]);
+  const [media, setMedia] = useState<ApiMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const { config, isLoading } = useConfig();
@@ -117,7 +107,7 @@ const LandingContent: React.FC = () => {
   // Fetch media
   useEffect(() => {
     api.getMedia()
-      .then(data => {
+      .then((data: ApiMedia[]) => {
         setMedia(data);
         setLoading(false);
       })
@@ -318,3 +308,4 @@ const Landing: React.FC<LandingProps> = ({ previewMode = false }) => {
 };
 
 export default Landing;
+export type { LandingProps };

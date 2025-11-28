@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "pnpm typecheck && pnpm build && xcopy /E /I /Y dist\\* worker\\public\\ && cd worker && pnpm run deploy"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",

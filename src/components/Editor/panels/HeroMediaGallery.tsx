@@ -20,17 +20,8 @@ import {
   Plus,
   AlertCircle
 } from 'lucide-react';
-import { api } from '../../../utils/api';
+import { api, type ApiMedia } from '../../../utils/api';
 import type { HeroMediaItem } from '../../../types/config';
-
-interface Media {
-  id: number;
-  title: string;
-  description: string;
-  url: string;
-  type: 'image' | 'video';
-  order_index?: number;
-}
 
 interface HeroMediaGalleryProps {
   items: HeroMediaItem[];
@@ -52,7 +43,7 @@ function MediaSelectorModal({
   onChange: (items: HeroMediaItem[]) => void;
   maxItems: number;
 }) {
-  const [media, setMedia] = useState<Media[]>([]);
+  const [media, setMedia] = useState<ApiMedia[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +83,7 @@ function MediaSelectorModal({
     return selectedItems.some(item => item.url === url);
   }, [selectedItems]);
 
-  const handleMediaClick = useCallback((mediaItem: Media) => {
+  const handleMediaClick = useCallback((mediaItem: ApiMedia) => {
     console.log('HeroMediaGallery: Click on media:', mediaItem.title);
     const alreadySelected = isSelected(mediaItem.url);
     

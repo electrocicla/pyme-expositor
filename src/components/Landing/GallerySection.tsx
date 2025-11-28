@@ -15,22 +15,13 @@ import GradientBorderCard from '../ReactBits/GradientBorderCard';
 import { hexToRgb, lightenColor } from '../../utils/colors';
 import type { DynamicStyles } from './useDynamicStyles';
 import type { AnimationsConfig, CardsConfig } from './useEffectsConfig';
-
-interface Media {
-  id: number;
-  title: string;
-  description: string;
-  url: string;
-  type: string;
-  category_id?: number;
-  tags?: string;
-}
+import type { ApiMedia } from '../../utils/api';
 
 interface GallerySectionProps {
   styles: DynamicStyles;
   animations: AnimationsConfig;
   cards: CardsConfig;
-  media: Media[];
+  media: ApiMedia[];
   loading: boolean;
   isDarkMode: boolean;
   transparentBg?: boolean;
@@ -49,7 +40,7 @@ const GallerySection: React.FC<GallerySectionProps> = ({
   const theme = config.theme;
 
   // Render card content (shared across all card types)
-  const renderCardContent = (item: Media) => (
+  const renderCardContent = (item: ApiMedia) => (
     <>
       <div className="aspect-video overflow-hidden">
         {item.type === 'video' ? (
@@ -85,7 +76,7 @@ const GallerySection: React.FC<GallerySectionProps> = ({
   );
 
   // Render card based on type
-  const renderCard = (item: Media, index: number) => {
+  const renderCard = (item: ApiMedia, index: number) => {
     const delay = animations.stagger ? index * 100 : 0;
 
     // Helper to wrap with animation

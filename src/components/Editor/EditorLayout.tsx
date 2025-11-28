@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
-import Landing from '../Landing';
+import Landing from '../Landing/index';
 import { ConfigProvider } from '../../contexts/ConfigContext';
 
 export const EditorLayout: React.FC = () => {
