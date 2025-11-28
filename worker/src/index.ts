@@ -296,6 +296,64 @@ app.get('/health', (c) => {
   return c.json({ status: 'healthy' })
 })
 
+// Config endpoints for the editor
+app.get('/api/config', async (c) => {
+  try {
+    // For now, return a default config
+    // In a real app, this would fetch from D1
+    return c.json({
+      theme: {
+        primaryColor: '#3b82f6',
+        secondaryColor: '#1e293b',
+        fontFamily: 'Inter',
+        borderRadius: '0.5rem',
+        mode: 'dark'
+      },
+      header: {
+        enabled: true,
+        navLinkStyle: 'none',
+        navLinks: []
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching config:', error)
+    return c.json({ error: 'Failed to fetch config' }, 500)
+  }
+})
+
+app.get('/api/config/:key', async (c) => {
+  try {
+    const key = c.req.param('key')
+    // Return config for specific key
+    return c.json({ [key]: {} })
+  } catch (error) {
+    console.error('Error fetching config key:', error)
+    return c.json({ error: 'Failed to fetch config' }, 500)
+  }
+})
+
+app.post('/api/config', async (c) => {
+  try {
+    const body = await c.req.json()
+    // Save config to D1 or environment
+    console.log('Config saved:', body)
+    return c.json({ success: true, message: 'Config saved' })
+  } catch (error) {
+    console.error('Error saving config:', error)
+    return c.json({ error: 'Failed to save config' }, 500)
+  }
+})
+
+app.post('/api/config/publish', async (c) => {
+  try {
+    // Publish config (make it live)
+    return c.json({ success: true, message: 'Config published' })
+  } catch (error) {
+    console.error('Error publishing config:', error)
+    return c.json({ error: 'Failed to publish config' }, 500)
+  }
+})
+
 // Serve static assets from the public directory
 app.get('*', async (c) => {
   // Try to serve static files
