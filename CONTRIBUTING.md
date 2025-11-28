@@ -219,10 +219,24 @@ Se pueden solicitar cambios antes de mergear.
 
 ### Crear Issue
 
-```markdown
-## Descripción
-Descripción clara del bug
+<!-- Short English summary added by maintainer -->
+# Contributing (Short)
 
+Thank you for your interest in contributing to Expositor! Quick steps:
+
+- Open an issue describing the bug or feature.
+- Create a branch named `feature/<name>` or `fix/<name>`.
+- Run `pnpm install`, `pnpm run typecheck`, and `pnpm lint` before opening a PR.
+- Keep commits small and descriptive; open a PR against `main` with testing steps.
+
+If you prefer Spanish guidance, a more detailed contribution guide follows.
+
+---
+
+````markdown
+# Contribuciones a Expositor
+
+Gracias por tu interés en contribuir a Expositor. Este documento proporciona directrices y procesos para contribuir.
 ## Pasos para Reproducir
 1. ...
 2. ...
