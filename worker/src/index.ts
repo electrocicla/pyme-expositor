@@ -290,9 +290,39 @@ app.get('/health', (c) => {
   return c.json({ status: 'healthy' })
 })
 
-// 404 handler
-app.notFound((c) => {
-  return c.json({ error: 'Not found' }, 404)
+// Serve static assets from the public directory
+app.get('*', async (c) => {
+  // Try to serve static files
+  const url = new URL(c.req.url)
+  let pathname = url.pathname
+
+  // Default to index.html for root path
+  if (pathname === '/') {
+    pathname = '/index.html'
+  }
+
+  try {
+    const response = await c.env.ASSETS.fetch(new Request(new URL(pathname, c.req.url), c.req))
+    
+    // If asset is found, return it
+    if (response.status === 200) {
+      return response
+    }
+  } catch (e) {
+    // Asset not found, continue
+  }
+
+  // If it's an API route or asset we couldn't find, return 404
+  if (pathname.startsWith('/api/')) {
+    return c.json({ error: 'Not found' }, 404)
+  }
+
+  // For SPA, serve index.html for any route not found (client-side routing)
+  try {
+    return await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url), c.req))
+  } catch (e) {
+    return c.json({ error: 'Not found' }, 404)
+  }
 })
 
 export default app
