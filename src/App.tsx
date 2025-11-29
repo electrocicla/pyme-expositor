@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './components/ThemeProvider'
-import Landing from './components/Landing'
+import Landing from './components/Landing/index'
 import Login from './components/Login'
 import { EditorLayout } from './components/Editor/EditorLayout'
 
