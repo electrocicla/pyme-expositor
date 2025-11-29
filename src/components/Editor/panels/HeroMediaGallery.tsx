@@ -261,6 +261,11 @@ function MediaSelectorModal({
                         muted
                         playsInline
                         poster=""
+                        onError={(e) => {
+                          console.error('Video load error:', m.url);
+                          // Hide broken video, show fallback
+                          (e.target as HTMLVideoElement).style.display = 'none';
+                        }}
                       />
                     ) : (
                       <img
@@ -268,6 +273,12 @@ function MediaSelectorModal({
                         alt={m.title}
                         className="w-full h-full object-cover bg-slate-800"
                         loading="lazy"
+                        onError={(e) => {
+                          console.error('Image load error:', m.url);
+                          // Set fallback image or hide
+                          (e.target as HTMLImageElement).style.opacity = '0.3';
+                          (e.target as HTMLImageElement).alt = 'Failed to load';
+                        }}
                       />
                     )}
                     
@@ -431,12 +442,20 @@ export function HeroMediaGallery({ items, onChange, maxItems = 10 }: HeroMediaGa
                     src={item.url}
                     className="w-full h-full object-cover"
                     muted
+                    onError={(e) => {
+                      console.error('Video preview load error:', item.url);
+                      (e.target as HTMLVideoElement).style.opacity = '0.3';
+                    }}
                   />
                 ) : (
                   <img
                     src={item.url}
                     alt={item.alt || item.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image preview load error:', item.url);
+                      (e.target as HTMLImageElement).style.opacity = '0.3';
+                    }}
                   />
                 )}
                 

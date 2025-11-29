@@ -210,6 +210,10 @@ const HeroMediaSlider: React.FC<HeroMediaSliderProps> = ({
           controls={videoControls}
           playsInline
           style={kenBurnsStyle}
+          onError={(e) => {
+            console.error('HeroMediaSlider: Video load error:', item.url);
+            (e.target as HTMLVideoElement).style.opacity = '0.3';
+          }}
         />
       );
     }
@@ -222,6 +226,10 @@ const HeroMediaSlider: React.FC<HeroMediaSliderProps> = ({
         className={mediaClasses}
         style={kenBurnsStyle}
         loading={index === 0 ? 'eager' : 'lazy'}
+        onError={(e) => {
+          console.error('HeroMediaSlider: Image load error:', item.url);
+          (e.target as HTMLImageElement).style.opacity = '0.3';
+        }}
       />
     );
   };

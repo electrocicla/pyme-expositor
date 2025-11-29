@@ -170,7 +170,10 @@ app.post('/api/protected/media', async (c) => {
     })
 
     const mediaType = file.type.startsWith('image/') ? 'image' : 'video'
-    const storageUrl = `https://storage.example.com/${fileKey}`
+    // Use the worker's media endpoint instead of a placeholder domain
+    // This URL will be served by the /media/:key endpoint
+    const workerUrl = new URL(c.req.url).origin
+    const storageUrl = `${workerUrl}/media/${fileKey}`
 
     const db = c.env.expositor_db
     const maxOrder = await db.prepare('SELECT MAX(order_index) as max_order FROM media').first<{ max_order: number | null }>()
@@ -262,6 +265,66 @@ app.delete('/api/protected/media/:id', async (c) => {
     return c.json({ error: 'Failed to delete media' }, 500)
   }
 })
+
+// Serve media files from R2 storage
+app.get('/media/:key', async (c) => {
+  try {
+    const key = c.req.param('key')
+    const object = await c.env.expositor_storage.get(key)
+    
+    if (!object) {
+      return c.json({ error: 'Media not found' }, 404)
+    }
+    
+    const headers = new Headers()
+    
+    // Get content type from R2 metadata or infer from extension
+    const contentType = object.httpMetadata?.contentType || inferContentType(key)
+    headers.set('Content-Type', contentType)
+    headers.set('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+    
+    // Set CORS headers for media
+    headers.set('Access-Control-Allow-Origin', '*')
+    
+    // For proper display of images/gifs
+    if (contentType.startsWith('image/')) {
+      headers.set('Content-Disposition', 'inline')
+    }
+    
+    return new Response(object.body, { headers })
+  } catch (error) {
+    console.error('Error serving media:', error)
+    return c.json({ error: 'Failed to serve media' }, 500)
+  }
+})
+
+// Helper function to infer content type from file extension
+function inferContentType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase()
+  const mimeTypes: Record<string, string> = {
+    // Images
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon',
+    'bmp': 'image/bmp',
+    'avif': 'image/avif',
+    // Videos
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'ogg': 'video/ogg',
+    'mov': 'video/quicktime',
+    'avi': 'video/x-msvideo',
+    'mkv': 'video/x-matroska',
+    // Audio (in case needed)
+    'mp3': 'audio/mpeg',
+    'wav': 'audio/wav',
+  }
+  return mimeTypes[ext || ''] || 'application/octet-stream'
+}
 
 // Health check
 app.get('/health', (c) => {

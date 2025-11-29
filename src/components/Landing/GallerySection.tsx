@@ -48,6 +48,10 @@ const GallerySection: React.FC<GallerySectionProps> = ({
             src={item.url}
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
             controls
+            onError={(e) => {
+              console.error('GallerySection: Video load error:', item.url);
+              (e.target as HTMLVideoElement).style.opacity = '0.3';
+            }}
           />
         ) : (
           <img
@@ -55,6 +59,10 @@ const GallerySection: React.FC<GallerySectionProps> = ({
             alt={item.title}
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={(e) => {
+              console.error('GallerySection: Image load error:', item.url);
+              (e.target as HTMLImageElement).style.opacity = '0.3';
+            }}
           />
         )}
       </div>
