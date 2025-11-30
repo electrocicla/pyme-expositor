@@ -117,6 +117,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
   }, [mode]);
 
   const handleSetConfig = useCallback((newConfig: SiteConfig) => {
+    console.log('ConfigContext: setConfig called');
+    console.log('ConfigContext: sections update:', newConfig.sections);
     setConfig(newConfig);
     setIsDirty(true);
     scheduleSave();

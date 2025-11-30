@@ -27,9 +27,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({ styles, animations, t
   const location = config.location;
   const theme = config.theme;
 
-  if (!location.googleMapsEmbedUrl && !location.address) {
-    return null;
-  }
+  // Check if section has any content to display
+  const hasMapContent = location.googleMapsEmbedUrl;
+  const hasContactContent = location.address || location.contactInfo?.phone || location.contactInfo?.email || location.contactInfo?.hours;
+  const hasAnyContent = hasMapContent || hasContactContent;
 
   const mapStyles: Record<string, React.CSSProperties> = {
     default: {},
@@ -217,7 +218,29 @@ const LocationSection: React.FC<LocationSectionProps> = ({ styles, animations, t
         )}
         
         <AnimateOnScroll animation={animations.type} duration={animations.duration}>
-          {renderContent()}
+          {hasAnyContent ? renderContent() : (
+            <div 
+              className="text-center py-16 px-8 rounded-xl border-2 border-dashed"
+              style={{ borderColor: styles.textMuted, backgroundColor: 'rgba(0,0,0,0.2)' }}
+            >
+              <svg 
+                className="w-16 h-16 mx-auto mb-4 opacity-50" 
+                style={{ color: styles.textMuted }}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p className="text-lg font-medium mb-2" style={{ color: styles.textMuted }}>
+                Location section is enabled
+              </p>
+              <p className="text-sm" style={{ color: styles.textMuted, opacity: 0.7 }}>
+                Add a Google Maps URL in the editor to display your location
+              </p>
+            </div>
+          )}
         </AnimateOnScroll>
       </div>
     </section>

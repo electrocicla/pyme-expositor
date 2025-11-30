@@ -96,27 +96,36 @@ const LandingContent: React.FC = () => {
 
   const isDarkMode = theme.mode === 'dark';
 
-  // Get sections config with defaults
-  const sections = config?.sections ?? {
-    header: { enabled: true, order: 1 },
-    hero: { enabled: true, order: 2 },
-    features: { enabled: true, order: 3 },
-    gallery: { enabled: true, order: 4 },
-    location: { enabled: false, order: 5 },
-    footer: { enabled: true, order: 6 },
-  };
-
   // Use custom hooks for styles and effects
   const styles = useDynamicStyles(config);
   const effects = useEffectsConfig(config);
 
   // Sort sections by order and filter enabled
+  // Use JSON.stringify to ensure proper dependency tracking for deep objects
+  const sectionsJson = JSON.stringify(config?.sections);
   const sortedSections = useMemo(() => {
-    return (Object.entries(sections) as [keyof SectionsConfig, { enabled: boolean; order: number }][])
-      .filter(([, v]) => v.enabled)
+    const sectionsData = config?.sections ?? {
+      header: { enabled: true, order: 1 },
+      hero: { enabled: true, order: 2 },
+      features: { enabled: true, order: 3 },
+      gallery: { enabled: true, order: 4 },
+      location: { enabled: false, order: 5 },
+      footer: { enabled: true, order: 6 },
+    };
+    
+    console.log('Landing: Recalculating sortedSections with:', sectionsData);
+    
+    const sorted = (Object.entries(sectionsData) as [keyof SectionsConfig, { enabled: boolean; order: number }][])
+      .filter(([key, v]) => {
+        console.log(`  Section ${key}: enabled=${v.enabled}, order=${v.order}`);
+        return v.enabled;
+      })
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([key]) => key);
-  }, [sections]);
+    
+    console.log('Landing: Enabled sections in order:', sorted);
+    return sorted;
+  }, [sectionsJson, config?.sections]);
 
   // Load Google Font
   useEffect(() => {
