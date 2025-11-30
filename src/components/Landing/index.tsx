@@ -8,7 +8,7 @@
  * - DIP: Depends on abstractions (hooks/utils) not concretions
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ConfigProvider, useConfig } from '../../contexts/ConfigContext';
 import { api, type ApiMedia } from '../../utils/api';
 import { loadGoogleFont } from '../../utils/fonts';
@@ -23,6 +23,7 @@ import HeaderSection from './HeaderSection';
 import HeroSection from './HeroSection';
 import FeaturesSection from './FeaturesSection';
 import GallerySection from './GallerySection';
+import LocationSection from './LocationSection';
 import FooterSection from './FooterSection';
 
 // Background Effects
@@ -36,6 +37,8 @@ import GradientOrbsBackground from '../ReactBits/GradientOrbsBackground';
 import GeometricBackground from '../ReactBits/GeometricBackground';
 import NoiseBackground from '../ReactBits/NoiseBackground';
 import { lightenColor } from '../../utils/colors';
+
+import type { SectionsConfig } from '../../types/config';
 
 /**
  * Full-screen loading component
@@ -93,9 +96,27 @@ const LandingContent: React.FC = () => {
 
   const isDarkMode = theme.mode === 'dark';
 
+  // Get sections config with defaults
+  const sections = config?.sections ?? {
+    header: { enabled: true, order: 1 },
+    hero: { enabled: true, order: 2 },
+    features: { enabled: true, order: 3 },
+    gallery: { enabled: true, order: 4 },
+    location: { enabled: false, order: 5 },
+    footer: { enabled: true, order: 6 },
+  };
+
   // Use custom hooks for styles and effects
   const styles = useDynamicStyles(config);
   const effects = useEffectsConfig(config);
+
+  // Sort sections by order and filter enabled
+  const sortedSections = useMemo(() => {
+    return (Object.entries(sections) as [keyof SectionsConfig, { enabled: boolean; order: number }][])
+      .filter(([, v]) => v.enabled)
+      .sort(([, a], [, b]) => a.order - b.order)
+      .map(([key]) => key);
+  }, [sections]);
 
   // Load Google Font
   useEffect(() => {
@@ -140,6 +161,60 @@ const LandingContent: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+
+  // Render a section by key
+  const renderSection = (sectionKey: keyof SectionsConfig) => {
+    switch (sectionKey) {
+      case 'header':
+        return <HeaderSection key="header" styles={styles} />;
+      case 'hero':
+        return (
+          <HeroSection 
+            key="hero"
+            styles={styles}
+            animations={effects.animations}
+            bgEffectsEnabled={effects.background.enabled}
+            bgType={effects.background.type}
+            isDarkMode={isDarkMode}
+          />
+        );
+      case 'features':
+        return (
+          <FeaturesSection 
+            key="features"
+            styles={styles}
+            animations={effects.animations}
+            transparentBg={effects.background.enabled}
+          />
+        );
+      case 'gallery':
+        return (
+          <GallerySection 
+            key="gallery"
+            styles={styles}
+            animations={effects.animations}
+            cards={effects.cards}
+            media={media}
+            loading={loading}
+            isDarkMode={isDarkMode}
+            transparentBg={effects.background.enabled}
+          />
+        );
+      case 'location':
+        return (
+          <LocationSection 
+            key="location"
+            styles={styles}
+            animations={effects.animations}
+            transparentBg={effects.background.enabled}
+          />
+        );
+      case 'footer':
+        return <FooterSection key="footer" styles={styles} transparentBg={effects.background.enabled} />;
+      default:
+        return null;
+    }
+  };
 
   // Show loading screen until config is fully loaded and ready
   if (isLoading || !isReady) {
@@ -248,40 +323,9 @@ const LandingContent: React.FC = () => {
         </div>
       )}
 
-      {/* Page Content - now with transparent backgrounds when effects enabled */}
+      {/* Page Content - rendered in order based on config */}
       <div className="relative" style={{ zIndex: 2 }}>
-        {/* Header */}
-        <HeaderSection styles={styles} />
-
-        {/* Hero - Pass bgEffectsEnabled to make background transparent */}
-        <HeroSection 
-          styles={styles}
-          animations={effects.animations}
-          bgEffectsEnabled={effects.background.enabled}
-          bgType={effects.background.type}
-          isDarkMode={isDarkMode}
-        />
-
-        {/* Features - with conditional background */}
-        <FeaturesSection 
-          styles={styles}
-          animations={effects.animations}
-          transparentBg={effects.background.enabled}
-        />
-
-        {/* Gallery - with conditional background */}
-        <GallerySection 
-          styles={styles}
-          animations={effects.animations}
-          cards={effects.cards}
-          media={media}
-          loading={loading}
-          isDarkMode={isDarkMode}
-          transparentBg={effects.background.enabled}
-        />
-
-        {/* Footer */}
-        <FooterSection styles={styles} transparentBg={effects.background.enabled} />
+        {sortedSections.map(renderSection)}
       </div>
     </div>
   );

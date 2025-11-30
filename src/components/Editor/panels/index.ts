@@ -18,6 +18,9 @@ export { GalleryPanel } from './GalleryPanel';
 export { HeaderPanel } from './HeaderPanel';
 export { FooterPanel } from './FooterPanel';
 export { MediaPanel } from './MediaPanel';
+export { FeaturesPanel } from './FeaturesPanel';
+export { LocationPanel } from './LocationPanel';
+export { SectionsPanel } from './SectionsPanel';
 
 // Shared Components & Utilities
 export { MediaSelector } from './MediaSelector';

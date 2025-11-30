@@ -11,6 +11,7 @@ export { default as HeaderSection } from './HeaderSection';
 export { default as HeroSection } from './HeroSection';
 export { default as FeaturesSection } from './FeaturesSection';
 export { default as GallerySection } from './GallerySection';
+export { default as LocationSection } from './LocationSection';
 export { default as FooterSection } from './FooterSection';
 
 // Effect Components

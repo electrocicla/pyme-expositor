@@ -139,7 +139,58 @@ export type NavLinkHoverAnimation =
   | 'scale'
   | 'bounce';
 
+// Section visibility and order configuration
+export interface SectionsConfig {
+  header: { enabled: boolean; order: number };
+  hero: { enabled: boolean; order: number };
+  features: { enabled: boolean; order: number };
+  gallery: { enabled: boolean; order: number };
+  location: { enabled: boolean; order: number };
+  footer: { enabled: boolean; order: number };
+}
+
+// Features Section Config (formerly hardcoded "Interactive Features")
+export interface FeaturesConfig {
+  title: string;
+  subtitle: string;
+  showTitle: boolean;
+  layout: 'grid' | 'carousel' | 'list';
+  columns: '2' | '3' | '4';
+  containerEffect: 'none' | 'glass' | 'pixel' | 'blur' | 'gradient' | 'glow';
+  items: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    color?: 'blue' | 'pink' | 'yellow' | 'green' | 'purple' | 'orange';
+  }>;
+  animateOnScroll: boolean;
+}
+
+// Location Section Config (new - Google Maps)
+export interface LocationConfig {
+  title: string;
+  subtitle?: string;
+  showTitle: boolean;
+  address?: string;
+  googleMapsUrl?: string;
+  googleMapsEmbedUrl?: string;
+  mapHeight: 'sm' | 'md' | 'lg' | 'xl';
+  mapStyle: 'default' | 'rounded' | 'glass' | 'bordered';
+  showAddress: boolean;
+  showDirectionsButton: boolean;
+  directionsButtonText?: string;
+  contactInfo?: {
+    phone?: string;
+    email?: string;
+    hours?: string;
+  };
+  layout: 'map-only' | 'map-left' | 'map-right' | 'map-top';
+}
+
 export interface SiteConfig {
+  // Section visibility control
+  sections: SectionsConfig;
   header: {
     title: string;
     logoUrl?: string;
@@ -181,6 +232,10 @@ export interface SiteConfig {
     navGlowIntensity?: 'soft' | 'normal' | 'strong';
   };
   hero: HeroConfig;
+  // Features section config (formerly hardcoded)
+  features: FeaturesConfig;
+  // Location section config (new)
+  location: LocationConfig;
   gallery: {
     title: string;
     subtitle?: string;
@@ -260,6 +315,14 @@ export interface SiteConfig {
 }
 
 export const defaultConfig: SiteConfig = {
+  sections: {
+    header: { enabled: true, order: 1 },
+    hero: { enabled: true, order: 2 },
+    features: { enabled: true, order: 3 },
+    gallery: { enabled: true, order: 4 },
+    location: { enabled: false, order: 5 },
+    footer: { enabled: true, order: 6 },
+  },
   header: {
     title: 'My Portfolio',
     layout: 'left-logo',
@@ -374,6 +437,35 @@ export const defaultConfig: SiteConfig = {
     viewAllText: 'View All Projects',
     viewAllUrl: '/portfolio',
     animateOnScroll: true,
+  },
+  features: {
+    title: 'Interactive Features',
+    subtitle: 'Experience our cutting-edge interface components powered by React Bits.',
+    showTitle: true,
+    layout: 'grid',
+    columns: '3',
+    containerEffect: 'pixel',
+    items: [
+      { id: '1', title: 'Analytics', description: 'Real-time data visualization', color: 'blue' },
+      { id: '2', title: 'Design', description: 'Pixel-perfect precision', color: 'pink' },
+      { id: '3', title: 'Speed', description: 'Lightning fast performance', color: 'yellow' },
+    ],
+    animateOnScroll: true,
+  },
+  location: {
+    title: 'Find Us',
+    subtitle: 'Visit our location',
+    showTitle: true,
+    address: '',
+    googleMapsUrl: '',
+    googleMapsEmbedUrl: '',
+    mapHeight: 'md',
+    mapStyle: 'rounded',
+    showAddress: true,
+    showDirectionsButton: true,
+    directionsButtonText: 'Get Directions',
+    contactInfo: {},
+    layout: 'map-only',
   },
   footer: {
     layout: 'columns',

@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Lightbulb, Sparkles, Palette } from 'lucide-react';
 import type { HeaderConfig } from './constants';
 import {
   navLinkContainerStyleOptions,
@@ -296,9 +297,9 @@ export const HeaderLinkStyleTab: React.FC<HeaderLinkStyleTabProps> = ({ header, 
 
       {/* Info Note */}
       <div className="text-xs text-white/40 text-center p-3 bg-slate-800/30 rounded-lg space-y-1">
-        <p>💡 <strong>Container Style:</strong> Shape and background (Tailwind)</p>
-        <p>✨ <strong>Advanced Effect:</strong> Interactive animations (React Bits)</p>
-        <p>🎨 <strong>Colors:</strong> Custom or inherit from theme</p>
+        <p className="flex items-center justify-center gap-1"><Lightbulb className="w-3 h-3" /> <strong>Container Style:</strong> Shape and background (Tailwind)</p>
+        <p className="flex items-center justify-center gap-1"><Sparkles className="w-3 h-3" /> <strong>Advanced Effect:</strong> Interactive animations (React Bits)</p>
+        <p className="flex items-center justify-center gap-1"><Palette className="w-3 h-3" /> <strong>Colors:</strong> Custom or inherit from theme</p>
       </div>
     </div>
   );

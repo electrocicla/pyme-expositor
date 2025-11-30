@@ -8,9 +8,12 @@ import {
   ThemePanel,
   EffectsPanel,
   MediaPanel,
+  FeaturesPanel,
+  LocationPanel,
+  SectionsPanel,
 } from './panels';
 
-type Tab = 'media' | 'theme' | 'effects' | 'header' | 'hero' | 'gallery' | 'footer';
+type Tab = 'media' | 'theme' | 'effects' | 'header' | 'hero' | 'gallery' | 'footer' | 'features' | 'location' | 'sections';
 
 // Toast notification component
 const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info'; onClose: () => void }> = ({ message, type, onClose }) => {
@@ -87,6 +90,22 @@ const tabIcons: Record<Tab, ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
     </svg>
   ),
+  features: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+  ),
+  location: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  sections: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+    </svg>
+  ),
 };
 
 export const Sidebar: React.FC = () => {
@@ -145,14 +164,17 @@ export const Sidebar: React.FC = () => {
   };
 
   const sectionTabs: { id: Tab; label: string }[] = [
+    { id: 'sections', label: 'Manage' },
     { id: 'header', label: 'Header' },
     { id: 'hero', label: 'Hero' },
+    { id: 'features', label: 'Features' },
     { id: 'gallery', label: 'Gallery' },
+    { id: 'location', label: 'Location' },
     { id: 'footer', label: 'Footer' },
   ];
 
   const isStylesActive = activeTab === 'theme' || activeTab === 'effects';
-  const isSectionsActive = ['header', 'hero', 'gallery', 'footer'].includes(activeTab);
+  const isSectionsActive = ['sections', 'header', 'hero', 'features', 'gallery', 'location', 'footer'].includes(activeTab);
 
   return (
     <div className="w-80 bg-slate-900/95 backdrop-blur-xl border-r border-white/10 h-full flex flex-col overflow-hidden">
@@ -256,9 +278,12 @@ export const Sidebar: React.FC = () => {
         {activeTab === 'media' && <MediaPanel />}
         {activeTab === 'theme' && <ThemePanel />}
         {activeTab === 'effects' && <EffectsPanel />}
+        {activeTab === 'sections' && <SectionsPanel />}
         {activeTab === 'header' && <HeaderPanel />}
         {activeTab === 'hero' && <HeroPanel />}
+        {activeTab === 'features' && <FeaturesPanel />}
         {activeTab === 'gallery' && <GalleryPanel />}
+        {activeTab === 'location' && <LocationPanel />}
         {activeTab === 'footer' && <FooterPanel />}
       </div>
 
