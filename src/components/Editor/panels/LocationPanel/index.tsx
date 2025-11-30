@@ -6,9 +6,9 @@
 import React, { useState, useCallback } from 'react';
 import { MapPin, Layout, Palette } from 'lucide-react';
 import { useConfig } from '../../../../contexts/ConfigContext';
-import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select, InfoBox } from '../shared';
+import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select, InfoBox, SectionStatusControl } from '../shared';
 import type { TabConfig, SelectOption } from '../shared/types';
-import type { LocationConfig } from '../../../../types/config';
+import type { LocationConfig, SectionsConfig } from '../../../../types/config';
 
 type LocationTabType = 'content' | 'layout' | 'style';
 
@@ -79,6 +79,41 @@ export const LocationPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LocationTabType>('content');
 
   const location = config.location;
+  const sections = config.sections;
+
+  // Section visibility helpers
+  const isEnabled = sections.location.enabled;
+  const currentOrder = sections.location.order;
+  const totalSections = Object.values(sections).filter(s => s.enabled).length;
+
+  const handleToggleSection = useCallback((enabled: boolean) => {
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        location: { ...sections.location, enabled },
+      },
+    });
+  }, [config, sections, setConfig]);
+
+  const handleMoveSection = useCallback((direction: 'up' | 'down') => {
+    const currentOrder = sections.location.order;
+    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+    
+    // Find the section to swap with
+    const swapKey = Object.entries(sections).find(([, v]) => v.order === targetOrder)?.[0] as keyof SectionsConfig | undefined;
+    
+    if (!swapKey) return;
+    
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        location: { ...sections.location, order: targetOrder },
+        [swapKey]: { ...sections[swapKey], order: currentOrder },
+      },
+    });
+  }, [config, sections, setConfig]);
 
   const handleUpdate = useCallback((key: keyof LocationConfig, value: any) => {
     setConfig({
@@ -272,6 +307,18 @@ export const LocationPanel: React.FC = () => {
       />
       
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Section Status Control - Add/Remove from Page */}
+        <SectionStatusControl
+          enabled={isEnabled}
+          order={currentOrder}
+          totalSections={totalSections || 1}
+          sectionName="Location"
+          canDisable={true}
+          onToggle={handleToggleSection}
+          onMoveUp={() => handleMoveSection('up')}
+          onMoveDown={() => handleMoveSection('down')}
+        />
+        
         {renderTabContent()}
       </div>
     </div>

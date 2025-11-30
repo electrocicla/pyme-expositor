@@ -21,6 +21,7 @@ export { SectionHeader, default as SectionHeaderComponent } from './SectionHeade
 export { PanelHeader, default as PanelHeaderComponent } from './PanelHeader';
 export { InfoBox, default as InfoBoxComponent } from './InfoBox';
 export { PresetButton, default as PresetButtonComponent } from './PresetButton';
+export { SectionStatusControl, default as SectionStatusControlComponent } from './SectionStatusControl';
 
 // Types
 export type { 

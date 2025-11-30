@@ -8,12 +8,13 @@
 
 import React, { useState, useCallback } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
-import { PanelHeader, TabNavigation } from '../shared';
+import { PanelHeader, TabNavigation, SectionStatusControl } from '../shared';
 import { galleryTabs, type GalleryTabType } from './constants';
 import { GalleryContentTab } from './GalleryContentTab';
 import { GalleryLayoutTab } from './GalleryLayoutTab';
 import { GalleryEffectsTab } from './GalleryEffectsTab';
 import { GalleryResponsiveTab } from './GalleryResponsiveTab';
+import type { SectionsConfig } from '../../../../types/config';
 
 /**
  * Main GalleryPanel component
@@ -24,6 +25,41 @@ export const GalleryPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<GalleryTabType>('content');
 
   const gallery = config.gallery;
+  const sections = config.sections;
+
+  // Section visibility helpers
+  const isEnabled = sections.gallery.enabled;
+  const currentOrder = sections.gallery.order;
+  const totalSections = Object.values(sections).filter(s => s.enabled).length;
+
+  const handleToggleSection = useCallback((enabled: boolean) => {
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        gallery: { ...sections.gallery, enabled },
+      },
+    });
+  }, [config, sections, setConfig]);
+
+  const handleMoveSection = useCallback((direction: 'up' | 'down') => {
+    const currentOrder = sections.gallery.order;
+    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+    
+    // Find the section to swap with
+    const swapKey = Object.entries(sections).find(([, v]) => v.order === targetOrder)?.[0] as keyof SectionsConfig | undefined;
+    
+    if (!swapKey) return;
+    
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        gallery: { ...sections.gallery, order: targetOrder },
+        [swapKey]: { ...sections[swapKey], order: currentOrder },
+      },
+    });
+  }, [config, sections, setConfig]);
 
   // Generic update handler
   const handleUpdate = useCallback((key: string, value: any) => {
@@ -71,6 +107,18 @@ export const GalleryPanel: React.FC = () => {
       />
       
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Section Status Control - Add/Remove from Page */}
+        <SectionStatusControl
+          enabled={isEnabled}
+          order={currentOrder}
+          totalSections={totalSections || 1}
+          sectionName="Gallery"
+          canDisable={true}
+          onToggle={handleToggleSection}
+          onMoveUp={() => handleMoveSection('up')}
+          onMoveDown={() => handleMoveSection('down')}
+        />
+        
         {renderTabContent()}
       </div>
     </div>

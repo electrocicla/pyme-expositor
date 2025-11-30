@@ -6,9 +6,9 @@
 import React, { useState, useCallback } from 'react';
 import { FileText, Layout, Sparkles } from 'lucide-react';
 import { useConfig } from '../../../../contexts/ConfigContext';
-import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select } from '../shared';
+import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select, SectionStatusControl } from '../shared';
 import type { TabConfig, SelectOption } from '../shared/types';
-import type { FeaturesConfig } from '../../../../types/config';
+import type { FeaturesConfig, SectionsConfig } from '../../../../types/config';
 
 type FeaturesTabType = 'content' | 'layout' | 'effects';
 
@@ -92,6 +92,41 @@ export const FeaturesPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<FeaturesTabType>('content');
 
   const features = config.features;
+  const sections = config.sections;
+
+  // Section visibility helpers
+  const isEnabled = sections.features.enabled;
+  const currentOrder = sections.features.order;
+  const totalSections = Object.values(sections).filter(s => s.enabled).length;
+
+  const handleToggleSection = useCallback((enabled: boolean) => {
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        features: { ...sections.features, enabled },
+      },
+    });
+  }, [config, sections, setConfig]);
+
+  const handleMoveSection = useCallback((direction: 'up' | 'down') => {
+    const currentOrder = sections.features.order;
+    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+    
+    // Find the section to swap with
+    const swapKey = Object.entries(sections).find(([, v]) => v.order === targetOrder)?.[0] as keyof SectionsConfig | undefined;
+    
+    if (!swapKey) return;
+    
+    setConfig({
+      ...config,
+      sections: {
+        ...sections,
+        features: { ...sections.features, order: targetOrder },
+        [swapKey]: { ...sections[swapKey], order: currentOrder },
+      },
+    });
+  }, [config, sections, setConfig]);
 
   const handleUpdate = useCallback((key: keyof FeaturesConfig, value: any) => {
     setConfig({
@@ -238,6 +273,18 @@ export const FeaturesPanel: React.FC = () => {
       />
       
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Section Status Control - Add/Remove from Page */}
+        <SectionStatusControl
+          enabled={isEnabled}
+          order={currentOrder}
+          totalSections={totalSections || 1}
+          sectionName="Features"
+          canDisable={true}
+          onToggle={handleToggleSection}
+          onMoveUp={() => handleMoveSection('up')}
+          onMoveDown={() => handleMoveSection('down')}
+        />
+        
         {renderTabContent()}
       </div>
     </div>
