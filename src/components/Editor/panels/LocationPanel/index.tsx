@@ -87,13 +87,17 @@ export const LocationPanel: React.FC = () => {
   const totalSections = Object.values(sections).filter(s => s.enabled).length;
 
   const handleToggleSection = useCallback((enabled: boolean) => {
-    setConfig({
+    console.log('LocationPanel: Toggling section to:', enabled);
+    console.log('LocationPanel: Current sections:', sections);
+    const newConfig = {
       ...config,
       sections: {
         ...sections,
         location: { ...sections.location, enabled },
       },
-    });
+    };
+    console.log('LocationPanel: New sections:', newConfig.sections);
+    setConfig(newConfig);
   }, [config, sections, setConfig]);
 
   const handleMoveSection = useCallback((direction: 'up' | 'down') => {
