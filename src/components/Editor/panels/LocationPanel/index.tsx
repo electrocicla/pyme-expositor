@@ -41,9 +41,22 @@ const mapStyleOptions = [
 
 // Helper to extract Google Maps embed URL from share link
 const extractEmbedUrl = (shareUrl: string): string => {
+  // If it's empty, return empty
+  if (!shareUrl || !shareUrl.trim()) {
+    return '';
+  }
+  
+  // If it's a full iframe tag, extract the src attribute
+  if (shareUrl.includes('<iframe')) {
+    const srcMatch = shareUrl.match(/src=["']([^"']+)["']/);
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1];
+    }
+  }
+  
   // If already an embed URL, return as is
-  if (shareUrl.includes('/embed')) {
-    return shareUrl;
+  if (shareUrl.includes('/maps/embed') || shareUrl.includes('output=embed')) {
+    return shareUrl.trim();
   }
   
   // Try to extract place ID or coordinates
@@ -142,14 +155,31 @@ export const LocationPanel: React.FC = () => {
     });
   }, [config, location, setConfig]);
 
-  const handleGoogleMapsUrlChange = (url: string) => {
+  const handleGoogleMapsUrlChange = useCallback((url: string) => {
+    // If user pasted iframe code, extract the src
+    if (url.includes('<iframe')) {
+      const embedUrl = extractEmbedUrl(url);
+      if (embedUrl) {
+        handleUpdate('googleMapsEmbedUrl', embedUrl);
+        // Don't store the iframe code in the share URL field
+        return;
+      }
+    }
+    
     handleUpdate('googleMapsUrl', url);
     // Try to auto-generate embed URL
     const embedUrl = extractEmbedUrl(url);
     if (embedUrl) {
       handleUpdate('googleMapsEmbedUrl', embedUrl);
     }
-  };
+  }, [handleUpdate]);
+
+  // Handle direct paste into embed URL field - extract src if iframe is pasted
+  const handleEmbedUrlChange = useCallback((value: string) => {
+    // If user pasted iframe code, extract just the src
+    const cleanUrl = extractEmbedUrl(value) || value;
+    handleUpdate('googleMapsEmbedUrl', cleanUrl);
+  }, [handleUpdate]);
 
   const renderContentTab = () => (
     <div className="space-y-6">
@@ -176,7 +206,7 @@ export const LocationPanel: React.FC = () => {
       <Section>
         <SectionHeader title="Google Maps" />
         <InfoBox variant="info">
-          Paste your Google Maps share link or embed URL. Go to Google Maps, find your location, click "Share" → "Embed a map" and copy the src URL from the iframe code.
+          Go to Google Maps, find your location, click "Share" → "Embed a map" and paste the entire iframe code OR just the src URL below.
         </InfoBox>
         <Input
           label="Google Maps Share URL"
@@ -186,9 +216,9 @@ export const LocationPanel: React.FC = () => {
         />
         <Textarea
           label="Embed URL (auto-generated or manual)"
-          placeholder="https://maps.google.com/maps?q=...&output=embed"
+          placeholder="Paste iframe code or URL: https://www.google.com/maps/embed?pb=..."
           value={location.googleMapsEmbedUrl || ''}
-          onChange={(value) => handleUpdate('googleMapsEmbedUrl', value)}
+          onChange={(value) => handleEmbedUrlChange(value)}
           rows={2}
         />
       </Section>

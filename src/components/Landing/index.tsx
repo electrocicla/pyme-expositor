@@ -101,8 +101,7 @@ const LandingContent: React.FC = () => {
   const effects = useEffectsConfig(config);
 
   // Sort sections by order and filter enabled
-  // Use JSON.stringify to ensure proper dependency tracking for deep objects
-  const sectionsJson = JSON.stringify(config?.sections);
+  // Memoize based on the actual sections object reference
   const sortedSections = useMemo(() => {
     const sectionsData = config?.sections ?? {
       header: { enabled: true, order: 1 },
@@ -113,19 +112,20 @@ const LandingContent: React.FC = () => {
       footer: { enabled: true, order: 6 },
     };
     
-    console.log('Landing: Recalculating sortedSections with:', sectionsData);
-    
     const sorted = (Object.entries(sectionsData) as [keyof SectionsConfig, { enabled: boolean; order: number }][])
-      .filter(([key, v]) => {
-        console.log(`  Section ${key}: enabled=${v.enabled}, order=${v.order}`);
-        return v.enabled;
-      })
+      .filter(([, v]) => v.enabled)
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([key]) => key);
     
-    console.log('Landing: Enabled sections in order:', sorted);
     return sorted;
-  }, [sectionsJson, config?.sections]);
+  }, [
+    config?.sections?.header?.enabled, config?.sections?.header?.order,
+    config?.sections?.hero?.enabled, config?.sections?.hero?.order,
+    config?.sections?.features?.enabled, config?.sections?.features?.order,
+    config?.sections?.gallery?.enabled, config?.sections?.gallery?.order,
+    config?.sections?.location?.enabled, config?.sections?.location?.order,
+    config?.sections?.footer?.enabled, config?.sections?.footer?.order,
+  ]);
 
   // Load Google Font
   useEffect(() => {
