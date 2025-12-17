@@ -12,6 +12,7 @@ import PixelCard from '../ReactBits/PixelCard';
 import GlassCard from '../ReactBits/GlassCard';
 import GlowBorderCard from '../ReactBits/GlowBorderCard';
 import GradientBorderCard from '../ReactBits/GradientBorderCard';
+import ElectricBorder from '../ReactBits/ElectricBorder';
 import type { DynamicStyles } from './useDynamicStyles';
 import type { AnimationsConfig } from './useEffectsConfig';
 import type { FeaturesConfig } from '../../types/config';
@@ -32,6 +33,16 @@ const colorToVariant: Record<string, 'blue' | 'pink' | 'yellow'> = {
   orange: 'yellow', // fallback
 };
 
+// Map color names to hex values for various effects
+const colorToHex: Record<string, string> = {
+  blue: '#3b82f6',
+  pink: '#ec4899',
+  yellow: '#eab308',
+  green: '#22c55e',
+  purple: '#a855f7',
+  orange: '#f97316',
+};
+
 interface FeatureCardProps {
   item: FeaturesConfig['items'][0];
   containerEffect: FeaturesConfig['containerEffect'];
@@ -41,6 +52,9 @@ interface FeatureCardProps {
 const FeatureCard: React.FC<FeatureCardProps> = ({ item, containerEffect, styles }) => {
   const { config } = useConfig();
   const theme = config.theme;
+  
+  // Get the item's color as hex for effects that support custom colors
+  const itemColorHex = colorToHex[item.color || 'blue'] || theme.primaryColor;
 
   const content = (
     <div className="text-center p-6 relative z-10 pointer-events-none">
@@ -73,7 +87,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ item, containerEffect, styles
       return (
         <GlowBorderCard 
           className="cursor-pointer"
-          glowColor={theme.primaryColor}
+          glowColor={itemColorHex}
           backgroundColor={theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)'}
           borderRadius={parseInt(theme.borderRadius) || 8}
         >
@@ -84,7 +98,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ item, containerEffect, styles
       return (
         <GradientBorderCard
           className="cursor-pointer"
-          gradientColors={[theme.primaryColor, theme.secondaryColor]}
+          gradientColors={[itemColorHex, theme.secondaryColor]}
           backgroundColor={theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)'}
           borderRadius={parseInt(theme.borderRadius) || 8}
           animated={true}
@@ -98,12 +112,33 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ item, containerEffect, styles
           className="cursor-pointer backdrop-blur-lg rounded-xl p-1"
           style={{ 
             background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            border: `1px solid ${itemColorHex}40`,
             borderRadius: theme.borderRadius,
+            boxShadow: `0 0 20px ${itemColorHex}20`,
           }}
         >
           {contentDark}
         </div>
+      );
+    case 'electric':
+      return (
+        <ElectricBorder
+          color={itemColorHex}
+          speed={1}
+          chaos={0.5}
+          thickness={2}
+          style={{ borderRadius: parseInt(theme.borderRadius) || 16 }}
+          className="cursor-pointer"
+        >
+          <div 
+            style={{ 
+              backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+              borderRadius: parseInt(theme.borderRadius) || 16,
+            }}
+          >
+            {contentDark}
+          </div>
+        </ElectricBorder>
       );
     case 'none':
     default:

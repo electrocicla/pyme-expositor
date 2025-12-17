@@ -37,6 +37,7 @@ const containerEffectOptions = [
   { value: 'blur', label: 'Blur' },
   { value: 'gradient', label: 'Gradient' },
   { value: 'glow', label: 'Glow' },
+  { value: 'electric', label: 'Electric' },
 ];
 
 const colorOptions: SelectOption[] = [
@@ -226,12 +227,14 @@ export const FeaturesPanel: React.FC = () => {
   const renderEffectsTab = () => (
     <div className="space-y-6">
       <Section>
-        <SectionHeader title="Container Effect" description="Visual effect for feature cards" />
+        <SectionHeader title="Container Effect" description="Visual effect for feature cards. Click again to deselect." />
         <ButtonGroup
           options={containerEffectOptions}
           value={features.containerEffect}
           onChange={(value) => handleUpdate('containerEffect', value)}
           columns={3}
+          allowDeselect={true}
+          defaultValue="none"
         />
       </Section>
 

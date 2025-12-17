@@ -24,6 +24,10 @@ interface ButtonGroupProps<T extends string> {
   showLabels?: boolean;
   disabled?: boolean;
   className?: string;
+  /** If true, clicking the selected option will deselect it (set to defaultValue or 'none') */
+  allowDeselect?: boolean;
+  /** Value to set when deselecting (defaults to 'none') */
+  defaultValue?: T;
 }
 
 export function ButtonGroup<T extends string>({
@@ -37,6 +41,8 @@ export function ButtonGroup<T extends string>({
   showLabels = true,
   disabled = false,
   className = '',
+  allowDeselect = false,
+  defaultValue,
 }: ButtonGroupProps<T>): React.ReactElement {
   const sizeClasses = {
     sm: 'p-2',
@@ -58,19 +64,31 @@ export function ButtonGroup<T extends string>({
         </label>
       )}
       <div className={`grid ${gridColsClasses[columns] || 'grid-cols-3'} ${gapClasses[gap] || 'gap-2'}`}>
-        {options.map((option) => (
-          <button
-            key={String(option.value)}
-            type="button"
-            onClick={() => !disabled && onChange(option.value)}
-            disabled={disabled}
-            className={`${sizeClasses[size]} rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center ${
-              value === option.value
-                ? buttonGroupActiveClasses
-                : buttonGroupInactiveClasses
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title={option.description}
-          >
+        {options.map((option) => {
+          const isSelected = value === option.value;
+          const handleClick = () => {
+            if (disabled) return;
+            if (allowDeselect && isSelected && option.value !== (defaultValue ?? 'none' as T)) {
+              // Deselect: set to default value
+              onChange((defaultValue ?? 'none') as T);
+            } else {
+              onChange(option.value);
+            }
+          };
+          
+          return (
+            <button
+              key={String(option.value)}
+              type="button"
+              onClick={handleClick}
+              disabled={disabled}
+              className={`${sizeClasses[size]} rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center ${
+                isSelected
+                  ? buttonGroupActiveClasses
+                  : buttonGroupInactiveClasses
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={option.description}
+            >
             {option.icon && (
               <div className={`${showLabels ? 'mb-1' : ''} text-current`}>
                 {option.icon}
@@ -81,8 +99,9 @@ export function ButtonGroup<T extends string>({
                 {option.label}
               </div>
             )}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

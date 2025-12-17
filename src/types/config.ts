@@ -156,7 +156,7 @@ export interface FeaturesConfig {
   showTitle: boolean;
   layout: 'grid' | 'carousel' | 'list';
   columns: '2' | '3' | '4';
-  containerEffect: 'none' | 'glass' | 'pixel' | 'blur' | 'gradient' | 'glow';
+  containerEffect: 'none' | 'glass' | 'pixel' | 'blur' | 'gradient' | 'glow' | 'electric';
   items: Array<{
     id: string;
     title: string;

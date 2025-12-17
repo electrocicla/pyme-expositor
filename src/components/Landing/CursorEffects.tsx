@@ -7,33 +7,27 @@
 import React from 'react';
 import type { CursorEffectsConfig } from './useEffectsConfig';
 
-// Lazy load cursor components
-const SplashCursor = React.lazy(() => import('../ReactBits/SplashCursor'));
-const SpotlightCursor = React.lazy(() => import('../ReactBits/SpotlightCursor'));
-const RippleCursor = React.lazy(() => import('../ReactBits/RippleCursor'));
-const TrailCursor = React.lazy(() => import('../ReactBits/TrailCursor'));
-const NeonCursor = React.lazy(() => import('../ReactBits/NeonCursor'));
-const GlitterCursor = React.lazy(() => import('../ReactBits/GlitterCursor'));
-const ClickSpark = React.lazy(() => import('../ReactBits/ClickSpark'));
+// Import cursor components directly instead of lazy loading
+// This ensures they work correctly in production builds
+import SplashCursor from '../ReactBits/SplashCursor';
+import SpotlightCursor from '../ReactBits/SpotlightCursor';
+import RippleCursor from '../ReactBits/RippleCursor';
+import TrailCursor from '../ReactBits/TrailCursor';
+import NeonCursor from '../ReactBits/NeonCursor';
+import GlitterCursor from '../ReactBits/GlitterCursor';
+import ClickSpark from '../ReactBits/ClickSpark';
 
 interface CursorEffectsProps {
   config: CursorEffectsConfig;
 }
 
 const CursorEffects: React.FC<CursorEffectsProps> = ({ config }) => {
-  // Debug logging
-  console.log('CursorEffects render: config =', config);
-  console.log('CursorEffects render: enabled =', config.enabled, 'type =', config.type);
-
   if (!config.enabled) {
-    console.log('CursorEffects: Returning null because enabled is false');
     return null;
   }
 
-  console.log('CursorEffects: Rendering cursor type:', config.type);
-
   return (
-    <React.Suspense fallback={null}>
+    <>
       {config.type === 'splash' && <SplashCursor />}
       {config.type === 'spotlight' && (
         <SpotlightCursor color={config.color} size={400} opacity={0.15} />
@@ -63,7 +57,7 @@ const CursorEffects: React.FC<CursorEffectsProps> = ({ config }) => {
           duration={500}
         />
       )}
-    </React.Suspense>
+    </>
   );
 };
 
