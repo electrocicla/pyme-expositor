@@ -16,6 +16,7 @@ import { HeroLayoutTab } from './HeroLayoutTab';
 import { HeroMediaTab } from './HeroMediaTab';
 import { HeroTypographyTab } from './HeroTypographyTab';
 import { HeroMobileTab } from './HeroMobileTab';
+import { HeroEffectsTab } from './HeroEffectsTab';
 
 /**
  * Main HeroPanel component
@@ -91,6 +92,8 @@ export const HeroPanel: React.FC = () => {
         return <HeroMediaTab {...props} />;
       case 'typography':
         return <HeroTypographyTab {...props} />;
+      case 'effects':
+        return <HeroEffectsTab />;
       case 'responsive':
         return <HeroMobileTab {...props} />;
       default:

@@ -35,13 +35,14 @@ import type { HeroConfig } from '../../../../types/config';
 import type { SelectOption, TabConfig } from '../shared/types';
 
 // Tab Configuration
-export type HeroTabType = 'content' | 'layout' | 'media' | 'typography' | 'responsive';
+export type HeroTabType = 'content' | 'layout' | 'media' | 'typography' | 'responsive' | 'effects';
 
 export const heroTabs: TabConfig<HeroTabType>[] = [
   { id: 'content', label: 'Content', icon: <FileText className="w-4 h-4" /> },
   { id: 'layout', label: 'Layout', icon: <Layout className="w-4 h-4" /> },
   { id: 'media', label: 'Media', icon: <Film className="w-4 h-4" /> },
   { id: 'typography', label: 'Typography', icon: <Type className="w-4 h-4" /> },
+  { id: 'effects', label: 'Effects', icon: <Sparkles className="w-4 h-4" /> },
   { id: 'responsive', label: 'Mobile', icon: <Smartphone className="w-4 h-4" /> },
 ];
 
