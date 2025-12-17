@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTheme } from './ThemeProvider'
 
@@ -7,7 +7,7 @@ interface Media {
   title: string
   description: string
   url: string
-  type: string
+  type: 'image' | 'video'
   order_index: number
 }
 
@@ -28,15 +28,7 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme()
   const token = localStorage.getItem('token')
 
-  useEffect(() => {
-    if (!token) {
-      navigate('/login')
-      return
-    }
-    fetchMedia()
-  }, [token, navigate])
-
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     try {
       const res = await fetch('/api/protected/media', {
         headers: { Authorization: `Bearer ${token}` }
@@ -54,11 +46,20 @@ const Dashboard = () => {
         navigate('/login')
       }
     } catch (err) {
+      console.error(err)
       setError('Failed to load media')
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, navigate])
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login')
+      return
+    }
+    fetchMedia()
+  }, [token, navigate, fetchMedia])
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -91,6 +92,7 @@ const Dashboard = () => {
         setError('Failed to upload media')
       }
     } catch (err) {
+      console.error(err)
       setError('Upload failed. Please try again.')
     } finally {
       setUploading(false)
@@ -138,6 +140,7 @@ const Dashboard = () => {
         setError('Failed to save changes')
       }
     } catch (err) {
+      console.error(err)
       setError('Save failed. Please try again.')
     }
   }
@@ -161,6 +164,7 @@ const Dashboard = () => {
         setError('Failed to delete media')
       }
     } catch (err) {
+      console.error(err)
       setError('Delete failed. Please try again.')
     }
   }

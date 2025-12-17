@@ -10,7 +10,7 @@ import { SectionHeader, Section } from '../shared';
 
 interface HeaderLinksTabProps {
   header: HeaderConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const HeaderLinksTab: React.FC<HeaderLinksTabProps> = ({ header, onUpdate }) => {

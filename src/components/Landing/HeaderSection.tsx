@@ -215,7 +215,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ styles }) => {
   };
 
   // Render a single navigation link based on style and effect
-  const renderNavLink = (link: { id: string; label: string; url: string }) => {
+  const NavLink = ({ link }: { link: { id: string; label: string; url: string } }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     
     const linkClasses = `
@@ -322,7 +322,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ styles }) => {
 
         {/* Navigation Links */}
         <nav className={`hidden md:flex items-center ${navLinkGapMap[navLinkGap]} ${config.header.layout === 'centered' ? 'mx-auto' : ''}`}>
-          {config.header.links.map(link => renderNavLink(link))}
+          {config.header.links.map(link => NavLink({ link }))}
         </nav>
 
         {/* Right Side Actions */}

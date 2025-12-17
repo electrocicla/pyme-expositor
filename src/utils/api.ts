@@ -5,12 +5,13 @@ export const API_BASE_URL = import.meta.env.DEV
   : `${API_WORKER_URL}/api`
 
 export interface ApiMedia {
-  id: string
+  id: number
   title: string
   description?: string
   url: string
   type: 'image' | 'video'
   category_id?: string
+  order_index?: number
   tags?: string[]
 }
 
@@ -39,7 +40,7 @@ export const removeAuthToken = (): void => {
 }
 
 // API client methods
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const api = {
   async get<T>(path: string): Promise<T> {
     const token = getAuthToken()
@@ -50,8 +51,7 @@ export const api = {
     return res.json()
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async post<T>(path: string, data: any): Promise<T> {
+  async post<T>(path: string, data: unknown): Promise<T> {
     const token = getAuthToken()
     const res = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
@@ -62,8 +62,7 @@ export const api = {
     return res.json()
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async put<T>(path: string, data: any): Promise<T> {
+  async put<T>(path: string, data: unknown): Promise<T> {
     const token = getAuthToken()
     const res = await fetch(`${API_BASE_URL}${path}`, {
       method: 'PUT',
@@ -89,19 +88,16 @@ export const api = {
     return api.get<ApiMedia[]>('/media')
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getProtectedMedia(): Promise<any> {
-    return api.get<any>('/protected/media')
-  },
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getProtectedMedia(): Promise<ApiMedia[]> {
+    return api.get<ApiMedia[]>('/protected/media')
+  }
+  ,
   getConfig(key?: string): Promise<Record<string, unknown>> {
     const path = key ? `/config/${key}` : '/config'
     return api.get<Record<string, unknown>>(path)
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  saveConfig(config: any): Promise<void> {
+  saveConfig(config: unknown): Promise<void> {
     return api.post<void>('/config', config)
   },
 
@@ -127,11 +123,11 @@ export const validateFile = (
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']
 
   if (!validTypes.includes(file.type)) {
-    return { valid: false, error: 'Tipo de archivo no soportado' }
+    return { valid: false, error: 'Unsupported file type' }
   }
 
   if (file.size > maxSize) {
-    return { valid: false, error: `Archivo muy grande. Máximo: ${formatFileSize(maxSize)}` }
+    return { valid: false, error: `File too large. Maximum: ${formatFileSize(maxSize)}` }
   }
 
   return { valid: true }
@@ -143,7 +139,7 @@ export const truncateText = (text: string, maxLength: number = 50): string => {
 
 export const formatDate = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('es-ES', {
+  return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -152,7 +148,7 @@ export const formatDate = (date: string | Date): string => {
 
 export const formatTime = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleTimeString('es-ES', {
+  return d.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
   })

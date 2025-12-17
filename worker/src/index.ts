@@ -78,22 +78,24 @@ const verifyToken = (token: string, secret: string): boolean => {
 }
 
 // Middleware for protected routes
-const authMiddleware = async (c: any, next: any) => {
+import type { Context } from 'hono'
+
+const authMiddleware = async (c: Context<{ Bindings: Env }>, next: () => Promise<void>) => {
   const auth = c.req.header('Authorization')
-  console.log('Auth header:', auth ? 'Present' : 'Missing')
+  console.warn('Auth header:', auth ? 'Present' : 'Missing')
   
   if (!auth || !auth.startsWith('Bearer ')) {
-    console.log('No Bearer token found')
+    console.error('No Bearer token found')
     return c.json({ error: 'Unauthorized: No Bearer token' }, 401)
   }
 
   const token = auth.substring(7)
   if (!verifyToken(token, c.env.JWT_SECRET)) {
-    console.log('Token verification failed')
+    console.error('Token verification failed')
     return c.json({ error: 'Invalid or expired token' }, 401)
   }
 
-  console.log('Auth middleware passed')
+  console.warn('Auth middleware passed')
   await next()
 }
 
@@ -135,13 +137,13 @@ app.use('/api/protected/*', authMiddleware)
 
 app.get('/api/protected/media', async (c) => {
   try {
-    console.log('GET /api/protected/media called')
+    console.warn('GET /api/protected/media called')
     const db = c.env.expositor_db
     const result = await db
       .prepare('SELECT * FROM media ORDER BY order_index ASC')
       .all<MediaRow>()
 
-    console.log('Returned media:', result.results?.length || 0, 'items')
+    console.warn('Returned media:', result.results?.length || 0, 'items')
     return c.json(result.results || [])
   } catch (error) {
     console.error('Error fetching protected media:', error)
@@ -151,7 +153,7 @@ app.get('/api/protected/media', async (c) => {
 
 app.post('/api/protected/media', async (c) => {
   try {
-    console.log('POST /api/protected/media called')
+    console.warn('POST /api/protected/media called')
     const formData = await c.req.formData()
     const file = formData.get('file') as File | null
     const title = formData.get('title') as string | null
@@ -197,7 +199,7 @@ app.post('/api/protected/media', async (c) => {
 
 app.put('/api/protected/media/:id', async (c) => {
   try {
-    console.log('PUT /api/protected/media/:id called')
+    console.warn('PUT /api/protected/media/:id called')
     const id = c.req.param('id')
     const body = await c.req.json() as UpdatePayload
 
@@ -244,7 +246,7 @@ app.put('/api/protected/media/:id', async (c) => {
 
 app.delete('/api/protected/media/:id', async (c) => {
   try {
-    console.log('DELETE /api/protected/media/:id called')
+    console.warn('DELETE /api/protected/media/:id called')
     const id = c.req.param('id')
     const db = c.env.expositor_db
 
@@ -408,12 +410,12 @@ app.get('/api/config/:key', async (c) => {
     ).bind(key).first<{ config: string }>()
     
     if (result?.config) {
-      console.log(`Config loaded for key '${key}':`, result.config.substring(0, 200) + '...')
+      console.warn(`Config loaded for key '${key}':`, result.config.substring(0, 200) + '...')
       return c.json(JSON.parse(result.config))
     }
     
     // Return default config if none exists
-    console.log(`No config found for key '${key}', returning default`)
+    console.warn(`No config found for key '${key}', returning default`)
     return c.json(defaultConfigTemplate)
   } catch (error) {
     console.error('Error fetching config key:', error)
@@ -455,7 +457,7 @@ app.post('/api/config', async (c) => {
       ).bind(configJson).run()
     }
     
-    console.log('Draft config saved successfully')
+    console.warn('Draft config saved successfully')
     return c.json({ success: true, message: 'Config saved' })
   } catch (error) {
     console.error('Error saving config:', error)
@@ -504,7 +506,7 @@ app.post('/api/config/publish', async (c) => {
       ).bind(draft.config).run()
     }
     
-    console.log('Config published successfully')
+    console.warn('Config published successfully')
     return c.json({ success: true, message: 'Config published' })
   } catch (error) {
     console.error('Error publishing config:', error)

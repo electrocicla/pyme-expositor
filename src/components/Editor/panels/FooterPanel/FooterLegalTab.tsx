@@ -11,7 +11,7 @@ import { SectionHeader, Section, InfoBox } from '../shared';
 
 interface FooterLegalTabProps {
   footer: FooterConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const FooterLegalTab: React.FC<FooterLegalTabProps> = ({ footer, onUpdate }) => {

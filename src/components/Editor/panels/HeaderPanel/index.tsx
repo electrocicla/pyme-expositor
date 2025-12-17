@@ -55,7 +55,7 @@ export const HeaderPanel: React.FC = () => {
     });
   }, [config, sections, setConfig]);
 
-  const handleHeaderUpdate = (key: string, value: any) => {
+  const handleHeaderUpdate = (key: string, value: unknown) => {
     setConfig({
       ...config,
       header: {

@@ -10,7 +10,7 @@ import { SectionHeader, Section, Input, Textarea } from '../shared';
 
 interface FooterContentTabProps {
   footer: FooterConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const FooterContentTab: React.FC<FooterContentTabProps> = ({ footer, onUpdate }) => {
@@ -31,7 +31,7 @@ export const FooterContentTab: React.FC<FooterContentTabProps> = ({ footer, onUp
     onUpdate('columns', [...columns, newColumn]);
   };
 
-  const updateColumn = (index: number, field: keyof FooterColumn, value: any) => {
+  const updateColumn = (index: number, field: keyof FooterColumn, value: unknown) => {
     const updated = [...columns];
     updated[index] = { ...updated[index], [field]: value };
     onUpdate('columns', updated);
@@ -63,7 +63,7 @@ export const FooterContentTab: React.FC<FooterContentTabProps> = ({ footer, onUp
     const updated = [...columns];
     updated[columnIndex] = {
       ...updated[columnIndex],
-      links: (updated[columnIndex].links || []).filter((_: any, i: number) => i !== linkIndex)
+      links: (updated[columnIndex].links || []).filter((_, i: number) => i !== linkIndex)
     };
     onUpdate('columns', updated);
   };
@@ -206,7 +206,7 @@ export const FooterContentTab: React.FC<FooterContentTabProps> = ({ footer, onUp
 
                 {/* Column Links */}
                 <div className="ml-2 space-y-1.5">
-                  {(column.links || []).map((link: any, linkIndex: number) => (
+                  {(column.links || []).map((link: { label: string; url: string; id: string }, linkIndex: number) => (
                     <div key={link.id} className="flex items-center gap-2">
                       <input
                         type="text"

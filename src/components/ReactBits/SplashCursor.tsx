@@ -20,6 +20,47 @@ interface SplashCursorProps {
   style?: React.CSSProperties;
 }
 
+interface WebGLExtensions {
+  formatRGBA: { internalFormat: number; format: number } | null;
+  formatRG: { internalFormat: number; format: number } | null;
+  formatR: { internalFormat: number; format: number } | null;
+  halfFloatTexType: number | null;
+  supportLinearFiltering: boolean;
+}
+
+interface WebGLContext {
+  gl: WebGLRenderingContext | WebGL2RenderingContext;
+  ext: WebGLExtensions;
+}
+
+interface FBO {
+  texture: WebGLTexture;
+  fbo: WebGLFramebuffer;
+  width: number;
+  height: number;
+  internalFormat: number;
+  format: number;
+  type: number;
+  param: number;
+  texelSizeX: number;
+  texelSizeY: number;
+  attach: (id: number) => number;
+}
+
+interface DoubleFBO {
+  width: number;
+  height: number;
+  internalFormat: number;
+  format: number;
+  type: number;
+  param: number;
+  texelSizeX: number;
+  texelSizeY: number;
+  read: FBO;
+  write: FBO;
+  swap: () => void;
+}
+
 function SplashCursor({
   SIM_RESOLUTION = 128,
   DYE_RESOLUTION = 1440,
@@ -44,20 +85,33 @@ function SplashCursor({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    function pointerPrototype(this: any) {
-      this.id = -1;
-      this.texcoordX = 0;
-      this.texcoordY = 0;
-      this.prevTexcoordX = 0;
-      this.prevTexcoordY = 0;
-      this.deltaX = 0;
-      this.deltaY = 0;
-      this.down = false;
-      this.moved = false;
-      this.color = [30, 0, 300];
+    class Pointer {
+      id: number;
+      texcoordX: number;
+      texcoordY: number;
+      prevTexcoordX: number;
+      prevTexcoordY: number;
+      deltaX: number;
+      deltaY: number;
+      down: boolean;
+      moved: boolean;
+      color: {r: number, g: number, b: number};
+
+      constructor() {
+        this.id = -1;
+        this.texcoordX = 0;
+        this.texcoordY = 0;
+        this.prevTexcoordX = 0;
+        this.prevTexcoordY = 0;
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.down = false;
+        this.moved = false;
+        this.color = {r: 30, g: 0, b: 300};
+      }
     }
 
-    let config = {
+    const config = {
       SIM_RESOLUTION,
       DYE_RESOLUTION,
       CAPTURE_RESOLUTION,
@@ -74,9 +128,9 @@ function SplashCursor({
       TRANSPARENT
     };
 
-    let pointers = [new (pointerPrototype as any)()];
+    const pointers: Pointer[] = [new Pointer()];
 
-    const { gl, ext } = getWebGLContext(canvas);
+    const { gl, ext }: WebGLContext = getWebGLContext(canvas);
 
     if (isWebGL2(gl)) {
         // WebGL2 specific setup if needed
@@ -89,31 +143,31 @@ function SplashCursor({
       config.SHADING = false;
     }
 
-    function isWebGL2(gl: any): gl is WebGL2RenderingContext {
+    function isWebGL2(gl: WebGLRenderingContext | WebGL2RenderingContext): gl is WebGL2RenderingContext {
         return typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
     }
 
-    function getWebGLContext(canvas: HTMLCanvasElement) {
+    function getWebGLContext(canvas: HTMLCanvasElement): WebGLContext {
       const params = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
-      let gl: any = canvas.getContext('webgl2', params);
+      let gl: WebGLRenderingContext | WebGL2RenderingContext | null = canvas.getContext('webgl2', params) as WebGL2RenderingContext | null;
       const isWebGL2 = !!gl;
-      if (!isWebGL2) gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
+      if (!isWebGL2) gl = (canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params)) as WebGLRenderingContext | null;
 
       if (!gl) throw new Error('WebGL not supported');
 
-      let halfFloat;
-      let supportLinearFiltering;
+      let halfFloat: OES_texture_half_float | null = null;
+      let supportLinearFiltering: boolean;
       if (isWebGL2) {
         gl.getExtension('EXT_color_buffer_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_float_linear');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_float_linear');
       } else {
         halfFloat = gl.getExtension('OES_texture_half_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
       }
 
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-      const halfFloatTexType = isWebGL2 ? (gl as WebGL2RenderingContext).HALF_FLOAT : halfFloat && halfFloat.HALF_FLOAT_OES;
+      const halfFloatTexType = isWebGL2 ? (gl as WebGL2RenderingContext).HALF_FLOAT : (halfFloat && halfFloat.HALF_FLOAT_OES) || null;
       let formatRGBA;
       let formatRG;
       let formatR;
@@ -124,9 +178,10 @@ function SplashCursor({
         formatRG = getSupportedFormat(gl2, gl2.RG16F, gl2.RG, halfFloatTexType);
         formatR = getSupportedFormat(gl2, gl2.R16F, gl2.RED, halfFloatTexType);
       } else {
-        formatRGBA = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-        formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-        formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
+        // For WebGL1, use basic RGBA format
+        formatRGBA = { internalFormat: gl.RGBA, format: gl.RGBA };
+        formatRG = { internalFormat: gl.RGBA, format: gl.RGBA };
+        formatR = { internalFormat: gl.RGBA, format: gl.RGBA };
       }
 
       return {
@@ -141,55 +196,60 @@ function SplashCursor({
       };
     }
 
-    function getSupportedFormat(gl: any, internalFormat: any, format: any, type: any): any {
+    function getSupportedFormat(gl: WebGLRenderingContext | WebGL2RenderingContext, internalFormat: number, format: number, type: number | null): { internalFormat: number; format: number } | null {
       if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
-        switch (internalFormat) {
-          case gl.R16F:
-            return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
-          case gl.RG16F:
-            return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
-          default:
-            return null;
+        // Only try fallback formats for WebGL2
+        if ('R16F' in gl) {
+          switch (internalFormat) {
+            case gl.R16F:
+              return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
+            case gl.RG16F:
+              return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
+          }
         }
+        return null;
       }
       return { internalFormat, format };
     }
 
-    function supportRenderTextureFormat(gl: any, internalFormat: any, format: any, type: any) {
-      let texture = gl.createTexture();
+    function supportRenderTextureFormat(gl: WebGLRenderingContext | WebGL2RenderingContext, internalFormat: number, format: number, type: number | null): boolean {
+      const texture = gl.createTexture();
+      if (!texture) return false;
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
-      let fbo = gl.createFramebuffer();
+      gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type ?? gl.UNSIGNED_BYTE, null);
+      const fbo = gl.createFramebuffer();
+      if (!fbo) return false;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-      let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
       return status === gl.FRAMEBUFFER_COMPLETE;
     }
 
     class Material {
-      vertexShader: any;
-      fragmentShaderSource: any;
-      programs: any[];
-      activeProgram: any;
-      uniforms: any[];
+      vertexShader: WebGLShader;
+      fragmentShaderSource: string;
+      programs: Record<number, WebGLProgram>;
+      activeProgram: WebGLProgram | null;
+      uniforms: Record<string, WebGLUniformLocation | null>;
 
-      constructor(vertexShader: any, fragmentShaderSource: any) {
+      constructor(vertexShader: WebGLShader, fragmentShaderSource: string) {
         this.vertexShader = vertexShader;
         this.fragmentShaderSource = fragmentShaderSource;
-        this.programs = [];
+        this.programs = {};
         this.activeProgram = null;
-        this.uniforms = [];
+        this.uniforms = {};
       }
-      setKeywords(keywords: any) {
+      setKeywords(keywords: string[]) {
         let hash = 0;
         for (let i = 0; i < keywords.length; i++) hash += hashCode(keywords[i]);
         let program = this.programs[hash];
         if (program == null) {
-          let fragmentShader = compileShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource, keywords);
+          const fragmentShader = compileShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource, keywords);
+          if (!fragmentShader) throw new Error('Failed to compile fragment shader');
           program = createProgram(this.vertexShader, fragmentShader);
           this.programs[hash] = program;
         }
@@ -203,10 +263,10 @@ function SplashCursor({
     }
 
     class Program {
-      uniforms: any;
-      program: any;
+      uniforms: Record<string, WebGLUniformLocation | null>;
+      program: WebGLProgram;
 
-      constructor(vertexShader: any, fragmentShader: any) {
+      constructor(vertexShader: WebGLShader, fragmentShader: WebGLShader) {
         this.uniforms = {};
         this.program = createProgram(vertexShader, fragmentShader);
         this.uniforms = getUniforms(this.program);
@@ -216,39 +276,42 @@ function SplashCursor({
       }
     }
 
-    function createProgram(vertexShader: any, fragmentShader: any) {
-      let program = gl.createProgram();
+    function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
+      const program = gl.createProgram();
+      if (!program) throw new Error('Failed to create program');
       gl.attachShader(program, vertexShader);
       gl.attachShader(program, fragmentShader);
       gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) console.trace(gl.getProgramInfoLog(program));
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) console.warn(gl.getProgramInfoLog(program));
       return program;
     }
 
-    function getUniforms(program: any) {
-      let uniforms: any = [];
-      let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    function getUniforms(program: WebGLProgram): Record<string, WebGLUniformLocation | null> {
+      const uniforms: Record<string, WebGLUniformLocation | null> = {};
+      const uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
       for (let i = 0; i < uniformCount; i++) {
-        let uniformName = gl.getActiveUniform(program, i)!.name;
-        uniforms[uniformName] = gl.getUniformLocation(program, uniformName);
+        const uniformInfo = gl.getActiveUniform(program, i);
+        if (uniformInfo) {
+          uniforms[uniformInfo.name] = gl.getUniformLocation(program, uniformInfo.name);
+        }
       }
       return uniforms;
     }
 
-    function compileShader(type: any, source: any, keywords?: any) {
+    function compileShader(type: number, source: string, keywords?: string[]): WebGLShader | null {
       source = addKeywords(source, keywords);
       const shader = gl.createShader(type);
-      if (!shader) return shader;
+      if (!shader) return null;
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.trace(gl.getShaderInfoLog(shader));
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(shader));
       return shader;
     }
 
-    function addKeywords(source: any, keywords: any) {
+    function addKeywords(source: string, keywords?: string[]): string {
       if (!keywords) return source;
       let keywordsString = '';
-      keywords.forEach((keyword: any) => {
+      keywords.forEach((keyword: string) => {
         keywordsString += '#define ' + keyword + '\n';
       });
       return keywordsString + source;
@@ -275,6 +338,7 @@ function SplashCursor({
         }
       `
     );
+    if (!baseVertexShader) throw new Error('Failed to compile base vertex shader');
 
     const copyShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -288,6 +352,7 @@ function SplashCursor({
         }
       `
     );
+    if (!copyShader) throw new Error('Failed to compile copy shader');
 
     const clearShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -302,6 +367,7 @@ function SplashCursor({
         }
       `
     );
+    if (!clearShader) throw new Error('Failed to compile clear shader');
 
     const displayShaderSource = `
       precision highp float;
@@ -358,6 +424,7 @@ function SplashCursor({
         }
       `
     );
+    if (!splatShader) throw new Error('Failed to compile splat shader');
 
     const advectionShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -393,8 +460,9 @@ function SplashCursor({
             gl_FragColor = result / decay;
         }
       `,
-      ext.supportLinearFiltering ? null : ['MANUAL_FILTERING']
+      ext.supportLinearFiltering ? undefined : ['MANUAL_FILTERING']
     );
+    if (!advectionShader) throw new Error('Failed to compile advection shader');
 
     const divergenceShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -422,6 +490,7 @@ function SplashCursor({
         }
       `
     );
+    if (!divergenceShader) throw new Error('Failed to compile divergence shader');
 
     const curlShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -444,6 +513,7 @@ function SplashCursor({
         }
       `
     );
+    if (!curlShader) throw new Error('Failed to compile curl shader');
 
     const vorticityShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -475,6 +545,7 @@ function SplashCursor({
         }
       `
     );
+    if (!vorticityShader) throw new Error('Failed to compile vorticity shader');
 
     const pressureShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -500,6 +571,7 @@ function SplashCursor({
         }
       `
     );
+    if (!pressureShader) throw new Error('Failed to compile pressure shader');
 
     const gradientSubtractShader = compileShader(
       gl.FRAGMENT_SHADER,
@@ -524,6 +596,7 @@ function SplashCursor({
         }
       `
     );
+    if (!gradientSubtractShader) throw new Error('Failed to compile gradient subtract shader');
 
     const blit = (() => {
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -532,7 +605,7 @@ function SplashCursor({
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(0);
-      return (target: any, clear = false) => {
+      return (target: FBO | null, clear = false) => {
         if (target == null) {
           gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
           gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -548,7 +621,7 @@ function SplashCursor({
       };
     })();
 
-    let dye: any, velocity: any, divergence: any, curl: any, pressure: any;
+    let dye: DoubleFBO | undefined, velocity: DoubleFBO | undefined, divergence: FBO | undefined, curl: FBO | undefined, pressure: DoubleFBO | undefined;
 
     const copyProgram = new Program(baseVertexShader, copyShader);
     const clearProgram = new Program(baseVertexShader, clearShader);
@@ -563,10 +636,10 @@ function SplashCursor({
     const displayMaterial = new Material(baseVertexShader, displayShaderSource);
 
     function initFramebuffers() {
-      let simRes = getResolution(config.SIM_RESOLUTION);
-      let dyeRes = getResolution(config.DYE_RESOLUTION);
+      const simRes = getResolution(config.SIM_RESOLUTION);
+      const dyeRes = getResolution(config.DYE_RESOLUTION);
 
-      const texType = ext.halfFloatTexType;
+      const texType = ext.halfFloatTexType ?? gl.UNSIGNED_BYTE;
       const rgba = ext.formatRGBA;
       const rg = ext.formatRG;
       const r = ext.formatR;
@@ -574,20 +647,21 @@ function SplashCursor({
 
       gl.disable(gl.BLEND);
 
-      if (!dye) dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-      else dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+      if (!dye) dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba!.internalFormat, rgba!.format, texType, filtering);
+      else dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba!.internalFormat, rgba!.format, texType, filtering);
 
-      if (!velocity) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
-      else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+      if (!velocity) velocity = createDoubleFBO(simRes.width, simRes.height, rg!.internalFormat, rg!.format, texType, filtering);
+      else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg!.internalFormat, rg!.format, texType, filtering);
 
-      divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-      curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-      pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+      divergence = createFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST);
+      curl = createFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST);
+      pressure = createDoubleFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST);
     }
 
-    function createFBO(w: any, h: any, internalFormat: any, format: any, type: any, param: any) {
+    function createFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number): FBO {
       gl.activeTexture(gl.TEXTURE0);
-      let texture = gl.createTexture();
+      const texture = gl.createTexture();
+      if (!texture) throw new Error('Failed to create texture');
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param);
@@ -595,23 +669,28 @@ function SplashCursor({
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
 
-      let fbo = gl.createFramebuffer();
+      const fbo = gl.createFramebuffer();
+      if (!fbo) throw new Error('Failed to create framebuffer');
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
       gl.viewport(0, 0, w, h);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
-      let texelSizeX = 1.0 / w;
-      let texelSizeY = 1.0 / h;
+      const texelSizeX = 1.0 / w;
+      const texelSizeY = 1.0 / h;
 
       return {
         texture,
         fbo,
         width: w,
         height: h,
+        internalFormat,
+        format,
+        type,
+        param,
         texelSizeX,
         texelSizeY,
-        attach(id: any) {
+        attach(id: number) {
           gl.activeTexture(gl.TEXTURE0 + id);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           return id;
@@ -619,44 +698,48 @@ function SplashCursor({
       };
     }
 
-    function createDoubleFBO(w: any, h: any, internalFormat: any, format: any, type: any, param: any) {
+    function createDoubleFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number): DoubleFBO {
       let fbo1 = createFBO(w, h, internalFormat, format, type, param);
       let fbo2 = createFBO(w, h, internalFormat, format, type, param);
 
       return {
         width: w,
         height: h,
+        internalFormat,
+        format,
+        type,
+        param,
         texelSizeX: fbo1.texelSizeX,
         texelSizeY: fbo1.texelSizeY,
         get read() {
           return fbo1;
         },
-        set read(value) {
+        set read(value: FBO) {
           fbo1 = value;
         },
         get write() {
           return fbo2;
         },
-        set write(value) {
+        set write(value: FBO) {
           fbo2 = value;
         },
         swap() {
-          let temp = fbo1;
+          const temp = fbo1;
           fbo1 = fbo2;
           fbo2 = temp;
         }
       };
     }
 
-    function resizeFBO(target: any, w: any, h: any, internalFormat: any, format: any, type: any, param: any) {
-      let newFBO = createFBO(w, h, internalFormat, format, type, param);
+    function resizeFBO(target: FBO, w: number, h: number, internalFormat: number, format: number, type: number, param: number): FBO {
+      const newFBO = createFBO(w, h, internalFormat, format, type, param);
       copyProgram.bind();
       gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0));
       blit(newFBO);
       return newFBO;
     }
 
-    function resizeDoubleFBO(target: any, w: any, h: any, internalFormat: any, format: any, type: any, param: any) {
+    function resizeDoubleFBO(target: DoubleFBO, w: number, h: number, internalFormat: number, format: number, type: number, param: number): DoubleFBO {
       if (target.width === w && target.height === h) return target;
       target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param);
       target.write = createFBO(w, h, internalFormat, format, type, param);
@@ -668,7 +751,7 @@ function SplashCursor({
     }
 
     function updateKeywords() {
-      let displayKeywords = [];
+      const displayKeywords = [];
       if (config.SHADING) displayKeywords.push('SHADING');
       displayMaterial.setKeywords(displayKeywords);
     }
@@ -693,7 +776,7 @@ function SplashCursor({
     }
 
     function calcDeltaTime() {
-      let now = Date.now();
+      const now = Date.now();
       let dt = (now - lastUpdateTime) / 1000;
       dt = Math.min(dt, 0.016666);
       lastUpdateTime = now;
@@ -702,8 +785,8 @@ function SplashCursor({
 
     function resizeCanvas() {
       if (!canvas) return false;
-      let width = scaleByPixelRatio(canvas.clientWidth);
-      let height = scaleByPixelRatio(canvas.clientHeight);
+      const width = scaleByPixelRatio(canvas.clientWidth);
+      const height = scaleByPixelRatio(canvas.clientHeight);
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
@@ -712,12 +795,13 @@ function SplashCursor({
       return false;
     }
 
-    function updateColors(dt: any) {
+    function updateColors(dt: number) {
       colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
       if (colorUpdateTimer >= 1) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
         pointers.forEach(p => {
-          p.color = generateColor();
+          const color = generateColor();
+          p.color = color;
         });
       }
     }
@@ -733,127 +817,127 @@ function SplashCursor({
       }
     }
 
-    function step(dt: any) {
+    function step(dt: number) {
       gl.disable(gl.BLEND);
 
       curlProgram.bind();
-      gl.uniform2f(curlProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      gl.uniform1i(curlProgram.uniforms.uVelocity, velocity.read.attach(0));
-      blit(curl);
+      gl.uniform2f(curlProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      gl.uniform1i(curlProgram.uniforms.uVelocity, velocity!.read.attach(0));
+      blit(curl!);
 
       vorticityProgram.bind();
-      gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      gl.uniform1i(vorticityProgram.uniforms.uVelocity, velocity.read.attach(0));
-      gl.uniform1i(vorticityProgram.uniforms.uCurl, curl.attach(1));
+      gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      gl.uniform1i(vorticityProgram.uniforms.uVelocity, velocity!.read.attach(0));
+      gl.uniform1i(vorticityProgram.uniforms.uCurl, curl!.attach(1));
       gl.uniform1f(vorticityProgram.uniforms.curl, config.CURL);
       gl.uniform1f(vorticityProgram.uniforms.dt, dt);
-      blit(velocity.write);
-      velocity.swap();
+      blit(velocity!.write);
+      velocity!.swap();
 
       divergenceProgram.bind();
-      gl.uniform2f(divergenceProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      gl.uniform1i(divergenceProgram.uniforms.uVelocity, velocity.read.attach(0));
-      blit(divergence);
+      gl.uniform2f(divergenceProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      gl.uniform1i(divergenceProgram.uniforms.uVelocity, velocity!.read.attach(0));
+      blit(divergence!);
 
       clearProgram.bind();
-      gl.uniform1i(clearProgram.uniforms.uTexture, pressure.read.attach(0));
+      gl.uniform1i(clearProgram.uniforms.uTexture, pressure!.read.attach(0));
       gl.uniform1f(clearProgram.uniforms.value, config.PRESSURE);
-      blit(pressure.write);
-      pressure.swap();
+      blit(pressure!.write);
+      pressure!.swap();
 
       pressureProgram.bind();
-      gl.uniform2f(pressureProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      gl.uniform1i(pressureProgram.uniforms.uDivergence, divergence.attach(0));
+      gl.uniform2f(pressureProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      gl.uniform1i(pressureProgram.uniforms.uDivergence, divergence!.attach(0));
       for (let i = 0; i < config.PRESSURE_ITERATIONS; i++) {
-        gl.uniform1i(pressureProgram.uniforms.uPressure, pressure.read.attach(1));
-        blit(pressure.write);
-        pressure.swap();
+        gl.uniform1i(pressureProgram.uniforms.uPressure, pressure!.read.attach(1));
+        blit(pressure!.write);
+        pressure!.swap();
       }
 
       gradienSubtractProgram.bind();
-      gl.uniform2f(gradienSubtractProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      gl.uniform1i(gradienSubtractProgram.uniforms.uPressure, pressure.read.attach(0));
-      gl.uniform1i(gradienSubtractProgram.uniforms.uVelocity, velocity.read.attach(1));
-      blit(velocity.write);
-      velocity.swap();
+      gl.uniform2f(gradienSubtractProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      gl.uniform1i(gradienSubtractProgram.uniforms.uPressure, pressure!.read.attach(0));
+      gl.uniform1i(gradienSubtractProgram.uniforms.uVelocity, velocity!.read.attach(1));
+      blit(velocity!.write);
+      velocity!.swap();
 
       advectionProgram.bind();
-      gl.uniform2f(advectionProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
-      if (!ext.supportLinearFiltering) gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, velocity.texelSizeX, velocity.texelSizeY);
-      let velocityId = velocity.read.attach(0);
+      gl.uniform2f(advectionProgram.uniforms.texelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      if (!ext.supportLinearFiltering) gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, velocity!.texelSizeX, velocity!.texelSizeY);
+      const velocityId = velocity!.read.attach(0);
       gl.uniform1i(advectionProgram.uniforms.uVelocity, velocityId);
       gl.uniform1i(advectionProgram.uniforms.uSource, velocityId);
       gl.uniform1f(advectionProgram.uniforms.dt, dt);
       gl.uniform1f(advectionProgram.uniforms.dissipation, config.VELOCITY_DISSIPATION);
-      blit(velocity.write);
-      velocity.swap();
+      blit(velocity!.write);
+      velocity!.swap();
 
-      if (!ext.supportLinearFiltering) gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
-      gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
-      gl.uniform1i(advectionProgram.uniforms.uSource, dye.read.attach(1));
+      if (!ext.supportLinearFiltering) gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye!.texelSizeX, dye!.texelSizeY);
+      gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity!.read.attach(0));
+      gl.uniform1i(advectionProgram.uniforms.uSource, dye!.read.attach(1));
       gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION);
-      blit(dye.write);
-      dye.swap();
+      blit(dye!.write);
+      dye!.swap();
     }
 
-    function render(target: any) {
+    function render(target: FBO | null) {
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.enable(gl.BLEND);
       drawDisplay(target);
     }
 
-    function drawDisplay(target: any) {
-      let width = target == null ? gl.drawingBufferWidth : target.width;
-      let height = target == null ? gl.drawingBufferHeight : target.height;
+    function drawDisplay(target: FBO | null) {
+      const width = target == null ? gl.drawingBufferWidth : target.width;
+      const height = target == null ? gl.drawingBufferHeight : target.height;
 
       displayMaterial.bind();
-      const uniforms = displayMaterial.uniforms as any;
+      const uniforms = displayMaterial.uniforms as Record<string, WebGLUniformLocation | null>;
       if (config.SHADING && uniforms.texelSize) gl.uniform2f(uniforms.texelSize, 1.0 / width, 1.0 / height);
-      if (uniforms.uTexture) gl.uniform1i(uniforms.uTexture, dye.read.attach(0));
+      if (uniforms.uTexture) gl.uniform1i(uniforms.uTexture, dye!.read.attach(0));
       blit(target);
     }
 
-    function splatPointer(pointer: any) {
-      let dx = pointer.deltaX * config.SPLAT_FORCE;
-      let dy = pointer.deltaY * config.SPLAT_FORCE;
+    function splatPointer(pointer: Pointer) {
+      const dx = pointer.deltaX * config.SPLAT_FORCE;
+      const dy = pointer.deltaY * config.SPLAT_FORCE;
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
     }
 
-    function clickSplat(pointer: any) {
+    function clickSplat(pointer: Pointer) {
       const color = generateColor();
       color.r *= 10.0;
       color.g *= 10.0;
       color.b *= 10.0;
-      let dx = 10 * (Math.random() - 0.5);
-      let dy = 30 * (Math.random() - 0.5);
+      const dx = 10 * (Math.random() - 0.5);
+      const dy = 30 * (Math.random() - 0.5);
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
     }
 
-    function splat(x: any, y: any, dx: any, dy: any, color: any) {
+    function splat(x: number, y: number, dx: number, dy: number, color: {r: number, g: number, b: number}) {
       if (!canvas) return;
       splatProgram.bind();
-      gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
+      gl.uniform1i(splatProgram.uniforms.uTarget, velocity!.read.attach(0));
       gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
       gl.uniform2f(splatProgram.uniforms.point, x, y);
       gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
       gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100.0));
-      blit(velocity.write);
-      velocity.swap();
+      blit(velocity!.write);
+      velocity!.swap();
 
-      gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0));
+      gl.uniform1i(splatProgram.uniforms.uTarget, dye!.read.attach(0));
       gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
-      blit(dye.write);
-      dye.swap();
+      blit(dye!.write);
+      dye!.swap();
     }
 
-    function correctRadius(radius: any) {
+    function correctRadius(radius: number) {
       if (!canvas) return radius;
-      let aspectRatio = canvas.width / canvas.height;
+      const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio > 1) radius *= aspectRatio;
       return radius;
     }
 
-    function updatePointerDownData(pointer: any, id: any, posX: any, posY: any) {
+    function updatePointerDownData(pointer: Pointer, id: number, posX: number, posY: number) {
       if (!canvas) return;
       pointer.id = id;
       pointer.down = true;
@@ -867,11 +951,11 @@ function SplashCursor({
       pointer.color = generateColor();
     }
 
-    function updatePointerUpData(pointer: any) {
+    function updatePointerUpData(pointer: Pointer) {
       pointer.down = false;
     }
 
-    function updatePointerMoveData(pointer: any, posX: any, posY: any, color: any) {
+    function updatePointerMoveData(pointer: Pointer, posX: number, posY: number, color: {r: number, g: number, b: number}) {
       if (!canvas) return;
       pointer.prevTexcoordX = pointer.texcoordX;
       pointer.prevTexcoordY = pointer.texcoordY;
@@ -883,35 +967,35 @@ function SplashCursor({
       pointer.color = color;
     }
 
-    function correctDeltaX(delta: any) {
+    function correctDeltaX(delta: number) {
       if (!canvas) return delta;
-      let aspectRatio = canvas.width / canvas.height;
+      const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio < 1) delta *= aspectRatio;
       return delta;
     }
 
-    function correctDeltaY(delta: any) {
+    function correctDeltaY(delta: number) {
       if (!canvas) return delta;
-      let aspectRatio = canvas.width / canvas.height;
+      const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio > 1) delta /= aspectRatio;
       return delta;
     }
 
     function generateColor() {
-      let c = HSVtoRGB(Math.random(), 1.0, 1.0);
+      const c = HSVtoRGB(Math.random(), 1.0, 1.0);
       c.r *= 0.15;
       c.g *= 0.15;
       c.b *= 0.15;
       return c;
     }
 
-    function HSVtoRGB(h: any, s: any, v: any) {
-      let r, g, b, i, f, p, q, t;
-      i = Math.floor(h * 6);
-      f = h * 6 - i;
-      p = v * (1 - s);
-      q = v * (1 - f * s);
-      t = v * (1 - (1 - f) * s);
+    function HSVtoRGB(h: number, s: number, v: number) {
+      let r = 0, g = 0, b = 0;
+      const i = Math.floor(h * 6);
+      const f = h * 6 - i;
+      const p = v * (1 - s);
+      const q = v * (1 - f * s);
+      const t = v * (1 - (1 - f) * s);
       switch (i % 6) {
         case 0:
           r = v;
@@ -949,8 +1033,8 @@ function SplashCursor({
       return { r, g, b };
     }
 
-    function getResolution(resolution: any) {
-      let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
+    function getResolution(resolution: number) {
+      const aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
       let min = resolution;
       let max = resolution * aspectRatio;
       if (aspectRatio < 1) min = resolution / aspectRatio;
@@ -959,12 +1043,12 @@ function SplashCursor({
       return { width: min, height: max };
     }
 
-    function scaleByPixelRatio(input: any) {
+    function scaleByPixelRatio(input: number) {
       const pixelRatio = window.devicePixelRatio || 1;
       return Math.floor(input * pixelRatio);
     }
 
-    function hashCode(s: any) {
+    function hashCode(s: string) {
       if (s.length === 0) return 0;
       let hash = 0;
       for (let i = 0; i < s.length; i++) {
@@ -974,7 +1058,7 @@ function SplashCursor({
       return hash;
     }
 
-    function wrap(value: any, min: any, max: any) {
+    function wrap(value: number, min: number, max: number) {
       const range = max - min;
       if (range === 0) return min;
       return ((value - min) % range) + min;
@@ -982,44 +1066,44 @@ function SplashCursor({
 
     // Event handlers stored for cleanup
     const handleMouseDown = (e: MouseEvent) => {
-      let pointer = pointers[0];
-      let posX = scaleByPixelRatio(e.clientX);
-      let posY = scaleByPixelRatio(e.clientY);
+      const pointer = pointers[0];
+      const posX = scaleByPixelRatio(e.clientX);
+      const posY = scaleByPixelRatio(e.clientY);
       updatePointerDownData(pointer, -1, posX, posY);
       clickSplat(pointer);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      let pointer = pointers[0];
-      let posX = scaleByPixelRatio(e.clientX);
-      let posY = scaleByPixelRatio(e.clientY);
-      let color = pointer.color;
+      const pointer = pointers[0];
+      const posX = scaleByPixelRatio(e.clientX);
+      const posY = scaleByPixelRatio(e.clientY);
+      const color = pointer.color;
       updatePointerMoveData(pointer, posX, posY, color);
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       const touches = e.targetTouches;
-      let pointer = pointers[0];
+      const pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
-        let posX = scaleByPixelRatio(touches[i].clientX);
-        let posY = scaleByPixelRatio(touches[i].clientY);
+        const posX = scaleByPixelRatio(touches[i].clientX);
+        const posY = scaleByPixelRatio(touches[i].clientY);
         updatePointerDownData(pointer, touches[i].identifier, posX, posY);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       const touches = e.targetTouches;
-      let pointer = pointers[0];
+      const pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
-        let posX = scaleByPixelRatio(touches[i].clientX);
-        let posY = scaleByPixelRatio(touches[i].clientY);
+        const posX = scaleByPixelRatio(touches[i].clientX);
+        const posY = scaleByPixelRatio(touches[i].clientY);
         updatePointerMoveData(pointer, posX, posY, pointer.color);
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       const touches = e.changedTouches;
-      let pointer = pointers[0];
+      const pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
         updatePointerUpData(pointer);
       }
@@ -1043,7 +1127,7 @@ function SplashCursor({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [
     SIM_RESOLUTION,
     DYE_RESOLUTION,

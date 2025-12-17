@@ -62,7 +62,7 @@ export const GalleryPanel: React.FC = () => {
   }, [config, sections, setConfig]);
 
   // Generic update handler
-  const handleUpdate = useCallback((key: string, value: any) => {
+  const handleUpdate = useCallback((key: string, value: unknown) => {
     setConfig({
       ...config,
       gallery: {

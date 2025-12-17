@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * FooterPanel Constants
  * Single Responsibility: Define footer panel configuration and options

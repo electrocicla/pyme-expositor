@@ -9,7 +9,7 @@ import { Input, Toggle, SectionHeader, Section, InfoBox, NumberInput } from '../
 
 interface GalleryContentTabProps {
   gallery: GalleryConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const GalleryContentTab: React.FC<GalleryContentTabProps> = ({ gallery, onUpdate }) => {

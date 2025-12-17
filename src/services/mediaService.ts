@@ -11,6 +11,18 @@ export interface UploadProgress {
   estimatedTimeRemaining?: number // seconds
 }
 
+export interface UploadLogEntry {
+  timestamp: string;
+  eventType: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  title: string;
+  duration?: number;
+  error?: string;
+  attemptNumber?: number;
+}
+
 export interface MediaUploadResponse {
   success: boolean
   message: string
@@ -393,7 +405,7 @@ export const uploadMedia = async (
       })
 
       const prepared = await prepareFile(file, (status) => {
-        console.log(status)
+        console.warn(status)
       })
 
       const fileToUpload = prepared.fileToUpload
@@ -511,11 +523,11 @@ const uploadWithProgress = async (
     const uploadId = Math.random().toString(36).substring(7)
     const uploadStartTime = Date.now()
     
-    console.log(`[Upload-${uploadId}] === Starting XHR Upload ===`)
-    console.log(`[Upload-${uploadId}] File: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`)
-    console.log(`[Upload-${uploadId}] Title: "${title}", Description: "${description}"`)
-    console.log(`[Upload-${uploadId}] Token present: ${!!token}, Token length: ${token?.length || 0}`)
-    console.log(`[Upload-${uploadId}] API Base URL: ${API_BASE_URL}`)
+    console.warn(`[Upload-${uploadId}] === Starting XHR Upload ===`)
+    console.warn(`[Upload-${uploadId}] File: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`)
+    console.warn(`[Upload-${uploadId}] Title: "${title}", Description: "${description}"`)
+    console.warn(`[Upload-${uploadId}] Token present: ${!!token}, Token length: ${token?.length || 0}`)
+    console.warn(`[Upload-${uploadId}] API Base URL: ${API_BASE_URL}`)
 
     const xhr = new XMLHttpRequest()
     const formData = new FormData()
@@ -524,12 +536,12 @@ const uploadWithProgress = async (
     formData.append('title', title.trim())
     formData.append('description', description?.trim() || '')
 
-    console.log(`[Upload-${uploadId}] FormData created, entries:`)
+    console.warn(`[Upload-${uploadId}] FormData created, entries:`)
     for (const [key, value] of formData.entries()) {
       if (key === 'file') {
-        console.log(`[Upload-${uploadId}]   - file: File object (${(value as File).size} bytes)`)
+        console.warn(`[Upload-${uploadId}]   - file: File object (${(value as File).size} bytes)`)
       } else {
-        console.log(`[Upload-${uploadId}]   - ${key}: ${String(value).substring(0, 50)}`)
+        console.warn(`[Upload-${uploadId}]   - ${key}: ${String(value).substring(0, 50)}`)
       }
     }
 
@@ -539,12 +551,12 @@ const uploadWithProgress = async (
     // Track upload progress
     xhr.upload.addEventListener('progress', (event) => {
       if (!progressEventFired) {
-        console.log(`[Upload-${uploadId}] First progress event fired`)
+        console.warn(`[Upload-${uploadId}] First progress event fired`)
         progressEventFired = true
       }
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100)
-        console.log(`[Upload-${uploadId}] Progress: ${event.loaded}/${event.total} (${percent}%)`)
+        console.warn(`[Upload-${uploadId}] Progress: ${event.loaded}/${event.total} (${percent}%)`)
         onProgress(event.loaded)
       }
     })
@@ -553,13 +565,13 @@ const uploadWithProgress = async (
     xhr.addEventListener('load', () => {
       responseReceived = true
       const duration = Date.now() - uploadStartTime
-      console.log(`[Upload-${uploadId}] Load event fired after ${duration}ms`)
-      console.log(`[Upload-${uploadId}] Status: ${xhr.status}`)
-      console.log(`[Upload-${uploadId}] Response headers: ${JSON.stringify({
+      console.warn(`[Upload-${uploadId}] Load event fired after ${duration}ms`)
+      console.warn(`[Upload-${uploadId}] Status: ${xhr.status}`)
+      console.warn(`[Upload-${uploadId}] Response headers: ${JSON.stringify({
         contentType: xhr.getResponseHeader('content-type'),
         contentLength: xhr.getResponseHeader('content-length')
       })}`)
-      console.log(`[Upload-${uploadId}] Response body (first 500 chars): ${xhr.responseText?.substring(0, 500)}`)
+      console.warn(`[Upload-${uploadId}] Response body (first 500 chars): ${xhr.responseText?.substring(0, 500)}`)
 
       try {
         const status = xhr.status
@@ -581,7 +593,7 @@ const uploadWithProgress = async (
         let data
         try {
           data = JSON.parse(responseText)
-          console.log(`[Upload-${uploadId}] Parsed JSON response:`, data)
+          console.warn(`[Upload-${uploadId}] Parsed JSON response:`, data)
         } catch (parseError) {
           console.error(`[Upload-${uploadId}] JSON parse error:`, parseError)
           resolve({
@@ -598,7 +610,7 @@ const uploadWithProgress = async (
 
         if (status === 201 || status === 200) {
           if (data.success) {
-            console.log(`[Upload-${uploadId}] ✓ SUCCESS`)
+            console.warn(`[Upload-${uploadId}] ✓ SUCCESS`)
             resolve({
               response: data as MediaUploadResponse,
               error: null
@@ -713,15 +725,15 @@ const uploadWithProgress = async (
     // Configure request
     xhr.timeout = 600000
     const uploadUrl = `${API_BASE_URL}/protected/media`
-    console.log(`[Upload-${uploadId}] Opening POST to: ${uploadUrl}`)
+    console.warn(`[Upload-${uploadId}] Opening POST to: ${uploadUrl}`)
     xhr.open('POST', uploadUrl)
     
-    console.log(`[Upload-${uploadId}] Setting Authorization header (${token?.length || 0} chars)`)
+    console.warn(`[Upload-${uploadId}] Setting Authorization header (${token?.length || 0} chars)`)
     xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     
-    console.log(`[Upload-${uploadId}] Calling xhr.send(formData)...`)
+    console.warn(`[Upload-${uploadId}] Calling xhr.send(formData)...`)
     xhr.send(formData)
-    console.log(`[Upload-${uploadId}] xhr.send() returned control`)
+    console.warn(`[Upload-${uploadId}] xhr.send() returned control`)
   })
 }
 
@@ -749,7 +761,7 @@ export const logUploadEvent = (
     ...data
   }
 
-  console.log(`[Media Upload] ${eventType.toUpperCase()}:`, logEntry)
+  console.warn(`[Media Upload] ${eventType.toUpperCase()}:`, logEntry)
 
   // Store in sessionStorage for debugging
   try {
@@ -769,7 +781,7 @@ export const logUploadEvent = (
 /**
  * Get upload logs from session storage
  */
-export const getUploadLogs = (): any[] => {
+export const getUploadLogs = (): UploadLogEntry[] => {
   try {
     const logs = sessionStorage.getItem('mediaUploadLogs')
     return logs ? JSON.parse(logs) : []

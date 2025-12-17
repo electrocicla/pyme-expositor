@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { defaultConfig } from '../types/config';
 import type { SiteConfig } from '../types/config';
@@ -17,16 +18,19 @@ interface ConfigContextType {
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
 // Deep merge function to combine defaultConfig with loaded config
-const deepMerge = (target: any, source: any): any => {
-  const result = { ...target };
-  for (const key of Object.keys(source)) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      result[key] = deepMerge(target[key] || {}, source[key]);
-    } else if (source[key] !== undefined) {
-      result[key] = source[key];
+const isPlainObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+const deepMerge = <T extends Record<string, unknown>>(target: T, source: Partial<T>): T => {
+  const result: Record<string, unknown> = { ...target } as Record<string, unknown>;
+  for (const key of Object.keys(source) as Array<keyof T>) {
+    const srcVal = source[key];
+    if (isPlainObject(srcVal) && isPlainObject(result[key as string])) {
+      result[key as string] = deepMerge(result[key as string] as Record<string, unknown>, srcVal as Record<string, unknown>);
+    } else if (srcVal !== undefined) {
+      result[key as string] = srcVal;
     }
   }
-  return result;
+  return result as T;
 };
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public' | 'editor' }> = ({ children, mode }) => {
@@ -60,14 +64,14 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
     const fetchConfig = async () => {
       try {
         const key = mode === 'editor' ? 'draft' : 'published';
-        console.log(`ConfigContext: Fetching ${key} config...`);
+        console.warn(`ConfigContext: Fetching ${key} config...`);
         const data = await api.getConfig(key);
-        console.log(`ConfigContext: Raw ${key} config from API:`, data);
-        console.log(`ConfigContext: Effects from API:`, data?.effects);
+        console.warn(`ConfigContext: Raw ${key} config from API:`, data);
+        console.warn(`ConfigContext: Effects from API:`, data && typeof data === 'object' ? (data as Record<string, unknown>).effects : undefined);
         // Always merge with defaultConfig to ensure all properties exist
         if (data && typeof data === 'object') {
-          const mergedConfig = deepMerge(defaultConfig, data);
-          console.log(`ConfigContext: Merged config effects:`, mergedConfig.effects);
+          const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
+          console.warn(`ConfigContext: Merged config effects:`, mergedConfig.effects);
           setConfig(mergedConfig);
         }
       } catch (error) {
@@ -100,19 +104,19 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
     
     // Schedule new save after 3 seconds
     saveTimeoutRef.current = setTimeout(async () => {
-      // Check refs at execution time
+        // Check refs at execution time
       if (!isDirtyRef.current || isSavingRef.current) return;
       
       setIsSaving(true);
-      try {
-        await api.saveConfig(configRef.current);
-        setIsDirty(false);
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error('Auto-save failed:', error);
-      } finally {
-        setIsSaving(false);
-      }
+        try {
+          await api.saveConfig(configRef.current);
+          setIsDirty(false);
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        } finally {
+          setIsSaving(false);
+        }
     }, 3000);
   }, [mode]);
 
@@ -151,12 +155,12 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
       await saveConfig();
     }
     
-    console.log('ConfigContext: Publishing config...');
-    console.log('ConfigContext: Current config effects:', configRef.current.effects);
+    console.warn('ConfigContext: Publishing config...');
+    console.warn('ConfigContext: Current config effects:', configRef.current?.effects);
     
     try {
       await api.publishConfig();
-      console.log('ConfigContext: Publish successful');
+      console.warn('ConfigContext: Publish successful');
     } catch (error) {
       console.error('Failed to publish config', error);
       throw error;

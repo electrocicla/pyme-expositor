@@ -15,7 +15,7 @@ import {
 
 interface GalleryResponsiveTabProps {
   gallery: GalleryConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const GalleryResponsiveTab: React.FC<GalleryResponsiveTabProps> = ({ gallery, onUpdate }) => {

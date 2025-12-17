@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
-type SectionType = 'header' | 'hero' | 'features' | 'gallery' | 'media' | 'location' | 'footer' | 'theme' | 'effects' | 'sections';
+export type SectionType = 'header' | 'hero' | 'features' | 'gallery' | 'media' | 'location' | 'footer' | 'theme' | 'effects' | 'sections';
 
 interface EditorContextType {
   activeSection: SectionType | null;

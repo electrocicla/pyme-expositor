@@ -10,7 +10,7 @@ import { layoutStyleOptions, headerHeightOptions, mobileMenuStyleOptions } from 
 
 interface HeaderLayoutTabProps {
   header: HeaderConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const HeaderLayoutTab: React.FC<HeaderLayoutTabProps> = ({ header, onUpdate }) => {

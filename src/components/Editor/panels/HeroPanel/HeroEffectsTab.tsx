@@ -1,5 +1,6 @@
 import React from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import type { HeroConfig } from '../../../../types/config';
 import { Select, InfoBox } from '../shared';
 import { Sparkles } from 'lucide-react';
 
@@ -7,7 +8,7 @@ export const HeroEffectsTab: React.FC = () => {
   const { config, setConfig } = useConfig();
   const { hero } = config;
 
-  const updateHero = (updates: Partial<typeof hero>) => {
+  const updateHero = (updates: Partial<HeroConfig>) => {
     setConfig({
       ...config,
       hero: { ...hero, ...updates },
@@ -38,7 +39,7 @@ export const HeroEffectsTab: React.FC = () => {
         <Select
           label="Primary Effect"
           value={hero.effect}
-          onChange={(value) => updateHero({ effect: value as any })}
+          onChange={(value) => updateHero({ effect: value as HeroConfig['effect'] })}
           options={effectOptions}
           description="Choose the main visual effect for this section."
         />

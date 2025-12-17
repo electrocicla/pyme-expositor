@@ -10,7 +10,7 @@ import { cardEffectOptions, hoverEffectOptions, cardEffectDescriptions } from '.
 
 interface GalleryEffectsTabProps {
   gallery: GalleryConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const GalleryEffectsTab: React.FC<GalleryEffectsTabProps> = ({ gallery, onUpdate }) => {

@@ -62,7 +62,7 @@ function MediaSelectorModal({
     setError(null);
     try {
       const data = await api.getMedia();
-      console.log('HeroMediaGallery: Fetched media:', data);
+      console.warn('HeroMediaGallery: Fetched media:', data);
       setMedia(data || []);
     } catch (err) {
       setError('Error loading media library');
@@ -84,13 +84,13 @@ function MediaSelectorModal({
   }, [selectedItems]);
 
   const handleMediaClick = useCallback((mediaItem: ApiMedia) => {
-    console.log('HeroMediaGallery: Click on media:', mediaItem.title);
+    console.warn('HeroMediaGallery: Click on media:', mediaItem.title);
     const alreadySelected = isSelected(mediaItem.url);
     
     if (alreadySelected) {
       // Remove from selection
       const newItems = selectedItems.filter(item => item.url !== mediaItem.url);
-      console.log('HeroMediaGallery: Removing item, new count:', newItems.length);
+      console.warn('HeroMediaGallery: Removing item, new count:', newItems.length);
       setSelectedItems(newItems);
     } else {
       // Add to selection (if under limit)
@@ -103,10 +103,10 @@ function MediaSelectorModal({
           alt: mediaItem.description || mediaItem.title,
         };
         const newItems = [...selectedItems, newItem];
-        console.log('HeroMediaGallery: Adding item, new count:', newItems.length);
+        console.warn('HeroMediaGallery: Adding item, new count:', newItems.length);
         setSelectedItems(newItems);
       } else {
-        console.log('HeroMediaGallery: Max items reached');
+        console.warn('HeroMediaGallery: Max items reached');
       }
     }
   }, [selectedItems, maxItems, isSelected]);
@@ -116,7 +116,7 @@ function MediaSelectorModal({
   };
 
   const handleDone = () => {
-    console.log('HeroMediaGallery: Done clicked, saving', selectedItems.length, 'items');
+    console.warn('HeroMediaGallery: Done clicked, saving', selectedItems.length, 'items');
     onChange(selectedItems);
     onClose();
   };
@@ -239,7 +239,7 @@ function MediaSelectorModal({
                     key={m.id}
                     type="button"
                     onClick={() => {
-                      console.log('HeroMediaGallery: Button clicked for', m.title);
+                      console.warn('HeroMediaGallery: Button clicked for', m.title);
                       if (canSelect) {
                         handleMediaClick(m);
                       }

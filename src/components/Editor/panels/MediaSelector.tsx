@@ -35,26 +35,16 @@ export function MediaSelector({ value, onChange, allowedTypes = ['image', 'video
     setError(null);
     try {
       const data = await api.getProtectedMedia();
-      // Handle different response formats
-      let mediaList: Media[] = [];
-      if (Array.isArray(data)) {
-        mediaList = data;
-      } else if (data?.results && Array.isArray(data.results)) {
-        mediaList = data.results;
-      } else if (data?.data && Array.isArray(data.data)) {
-        mediaList = data.data;
-      }
-      
-      // Ensure all items have required properties with safe defaults
-      mediaList = mediaList.map((item: any) => ({
+      // Normalize API response to internal Media[] shape
+      const mediaList: Media[] = (Array.isArray(data) ? data : []).map((item) => ({
         id: item.id ?? 0,
         title: item.title ?? 'Untitled',
         description: item.description ?? '',
         url: item.url ?? '',
-        type: item.type ?? 'image',
+        type: (item.type as 'image' | 'video') ?? 'image',
         order_index: item.order_index ?? 0,
       }));
-      
+
       setMedia(mediaList);
     } catch (err) {
       console.error('Failed to fetch media:', err);

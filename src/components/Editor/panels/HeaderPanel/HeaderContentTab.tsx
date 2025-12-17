@@ -11,7 +11,7 @@ import { LogoSelector } from '../LogoSelector';
 
 interface HeaderContentTabProps {
   header: HeaderConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const HeaderContentTab: React.FC<HeaderContentTabProps> = ({ header, onUpdate }) => {

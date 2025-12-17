@@ -83,6 +83,20 @@ const HeroMediaSlider: React.FC<HeroMediaSliderProps> = ({
   const totalItems = items.length;
   const hasMultiple = totalItems > 1;
 
+  const goToNext = useCallback(() => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev + 1) % totalItems);
+    setTimeout(() => setIsAnimating(false), 500);
+  }, [totalItems, isAnimating]);
+
+  const goToPrev = useCallback(() => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev - 1 + totalItems) % totalItems);
+    setTimeout(() => setIsAnimating(false), 500);
+  }, [totalItems, isAnimating]);
+
   // Auto-advance slides
   useEffect(() => {
     if (!autoplay || !hasMultiple || (pauseOnHover && isHovered)) {
@@ -97,21 +111,7 @@ const HeroMediaSlider: React.FC<HeroMediaSliderProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [autoplay, interval, hasMultiple, isHovered, pauseOnHover, currentIndex]);
-
-  const goToNext = useCallback(() => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev + 1) % totalItems);
-    setTimeout(() => setIsAnimating(false), 500);
-  }, [totalItems, isAnimating]);
-
-  const goToPrev = useCallback(() => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev - 1 + totalItems) % totalItems);
-    setTimeout(() => setIsAnimating(false), 500);
-  }, [totalItems, isAnimating]);
+  }, [autoplay, interval, hasMultiple, isHovered, pauseOnHover, currentIndex, goToNext]);
 
   const goToSlide = (index: number) => {
     if (isAnimating || index === currentIndex) return;

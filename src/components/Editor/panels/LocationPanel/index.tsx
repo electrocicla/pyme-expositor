@@ -100,8 +100,8 @@ export const LocationPanel: React.FC = () => {
   const totalSections = Object.values(sections).filter(s => s.enabled).length;
 
   const handleToggleSection = useCallback((enabled: boolean) => {
-    console.log('LocationPanel: Toggling section to:', enabled);
-    console.log('LocationPanel: Current sections:', sections);
+    console.warn('LocationPanel: Toggling section to:', enabled);
+    console.warn('LocationPanel: Current sections:', sections);
     const newConfig = {
       ...config,
       sections: {
@@ -109,7 +109,7 @@ export const LocationPanel: React.FC = () => {
         location: { ...sections.location, enabled },
       },
     };
-    console.log('LocationPanel: New sections:', newConfig.sections);
+    console.warn('LocationPanel: New sections:', newConfig.sections);
     setConfig(newConfig);
   }, [config, sections, setConfig]);
 
@@ -132,7 +132,7 @@ export const LocationPanel: React.FC = () => {
     });
   }, [config, sections, setConfig]);
 
-  const handleUpdate = useCallback((key: keyof LocationConfig, value: any) => {
+  const handleUpdate = useCallback((key: keyof LocationConfig, value: unknown) => {
     setConfig({
       ...config,
       location: {

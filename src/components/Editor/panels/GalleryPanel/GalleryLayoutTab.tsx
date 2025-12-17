@@ -15,7 +15,7 @@ import {
 
 interface GalleryLayoutTabProps {
   gallery: GalleryConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const GalleryLayoutTab: React.FC<GalleryLayoutTabProps> = ({ gallery, onUpdate }) => {

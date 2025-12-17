@@ -60,11 +60,11 @@ export function useEffectsConfig(config: SiteConfig): EffectsConfigResult {
   return useMemo(() => {
     const effects = config.effects;
     
-    console.log('useEffectsConfig: config.effects =', effects);
-    console.log('useEffectsConfig: cursor enabled =', effects?.cursor?.enabled);
+    console.warn('useEffectsConfig: config.effects =', effects);
+    console.warn('useEffectsConfig: cursor enabled =', effects?.cursor?.enabled);
     
     if (!effects) {
-      console.log('useEffectsConfig: No effects, returning defaults');
+      console.warn('useEffectsConfig: No effects, returning defaults');
       return DEFAULT_EFFECTS;
     }
     
@@ -97,7 +97,7 @@ export function useEffectsConfig(config: SiteConfig): EffectsConfigResult {
       },
     };
     
-    console.log('useEffectsConfig: Returning config with cursor.enabled =', result.cursor.enabled);
+    console.warn('useEffectsConfig: Returning config with cursor.enabled =', result.cursor.enabled);
     return result;
   }, [config]);
 }

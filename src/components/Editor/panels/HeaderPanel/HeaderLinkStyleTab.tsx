@@ -23,7 +23,7 @@ import { SectionHeader, Section, Select, ColorPicker } from '../shared';
 
 interface HeaderLinkStyleTabProps {
   header: HeaderConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const HeaderLinkStyleTab: React.FC<HeaderLinkStyleTabProps> = ({ header, onUpdate }) => {

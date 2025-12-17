@@ -67,23 +67,13 @@ function LogoSelectorModal({
     setError(null);
     try {
       const data = await api.getProtectedMedia();
-      // Handle different response formats
-      let mediaList: Media[] = [];
-      if (Array.isArray(data)) {
-        mediaList = data;
-      } else if (data?.results && Array.isArray(data.results)) {
-        mediaList = data.results;
-      } else if (data?.data && Array.isArray(data.data)) {
-        mediaList = data.data;
-      }
-      
-      // Ensure all items have required properties
-      mediaList = mediaList.map((item: any) => ({
+      // API returns an array of media objects
+      const mediaList: Media[] = (Array.isArray(data) ? data : []).map((item) => ({
         id: item.id ?? 0,
         title: item.title ?? 'Untitled',
         description: item.description ?? '',
         url: item.url ?? '',
-        type: item.type ?? 'image',
+        type: (item.type as 'image' | 'video') ?? 'image',
         order_index: item.order_index ?? 0,
       }));
       

@@ -10,7 +10,7 @@ import { Toggle, SectionHeader, Section, InfoBox } from '../shared';
 
 interface HeaderBehaviorTabProps {
   header: HeaderConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const HeaderBehaviorTab: React.FC<HeaderBehaviorTabProps> = ({ header, onUpdate }) => {

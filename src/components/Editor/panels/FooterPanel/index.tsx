@@ -55,7 +55,7 @@ export const FooterPanel: React.FC = () => {
     });
   }, [config, sections, setConfig]);
 
-  const handleFooterUpdate = (key: string, value: any) => {
+  const handleFooterUpdate = (key: string, value: unknown) => {
     setConfig({
       ...config,
       footer: {

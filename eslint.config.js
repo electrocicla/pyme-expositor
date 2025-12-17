@@ -6,6 +6,9 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
   { ignores: ['dist', 'node_modules', '.wrangler', '.vscode'] },
+  // Include recommended JS and TypeScript configs directly (flat config style)
+  js.configs.recommended,
+  ...ts.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -16,10 +19,6 @@ export default [
         ecmaFeatures: { jsx: true },
       },
     },
-    extends: [
-      js.configs.recommended,
-      ...ts.configs.recommended,
-    ],
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,

@@ -10,7 +10,7 @@ import { SectionHeader, Section, Toggle, ColorPicker } from '../shared';
 
 interface FooterLayoutTabProps {
   footer: FooterConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const FooterLayoutTab: React.FC<FooterLayoutTabProps> = ({ footer, onUpdate }) => {

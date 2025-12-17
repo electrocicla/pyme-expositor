@@ -82,7 +82,7 @@ const FeatureItemEditor: React.FC<FeatureItemEditorProps> = ({ item, onChange, o
         label="Color"
         value={item.color || 'blue'}
         options={colorOptions}
-        onChange={(value) => onChange({ ...item, color: value as any })}
+        onChange={(value) => onChange({ ...item, color: value as FeaturesConfig['items'][0]['color'] })}
       />
     </div>
   );
@@ -129,7 +129,7 @@ export const FeaturesPanel: React.FC = () => {
     });
   }, [config, sections, setConfig]);
 
-  const handleUpdate = useCallback((key: keyof FeaturesConfig, value: any) => {
+  const handleUpdate = useCallback(<K extends keyof FeaturesConfig>(key: K, value: FeaturesConfig[K]) => {
     setConfig({
       ...config,
       features: {
@@ -212,13 +212,13 @@ export const FeaturesPanel: React.FC = () => {
           label="Layout Style"
           value={features.layout}
           options={layoutOptions}
-          onChange={(value) => handleUpdate('layout', value)}
+          onChange={(value) => handleUpdate('layout', value as 'grid' | 'carousel' | 'list')}
         />
         <Select
           label="Columns"
           value={features.columns}
           options={columnsOptions}
-          onChange={(value) => handleUpdate('columns', value)}
+          onChange={(value) => handleUpdate('columns', value as '2' | '3' | '4')}
         />
       </Section>
     </div>
@@ -231,7 +231,7 @@ export const FeaturesPanel: React.FC = () => {
         <ButtonGroup
           options={containerEffectOptions}
           value={features.containerEffect}
-          onChange={(value) => handleUpdate('containerEffect', value)}
+          onChange={(value) => handleUpdate('containerEffect', value as 'none' | 'glass' | 'pixel' | 'blur' | 'gradient' | 'glow' | 'electric')}
           columns={3}
           allowDeselect={true}
           defaultValue="none"

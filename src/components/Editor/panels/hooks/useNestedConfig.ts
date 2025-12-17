@@ -3,7 +3,7 @@
  * Useful for mobile configs, effects sub-objects, etc.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
 import type { SiteConfig } from '../../../../types/config';
 
@@ -19,7 +19,7 @@ export function useNestedConfig<
   const { config, setConfig } = useConfig();
   
   const sectionConfig = config[sectionKey] as Record<string, unknown>;
-  const nestedConfig = (sectionConfig?.[nestedKey as string] || {}) as Record<string, unknown>;
+  const nestedConfig = useMemo(() => (sectionConfig?.[nestedKey as string] || {}) as Record<string, unknown>, [sectionConfig, nestedKey]);
   
   const updateNested = useCallback(<T extends string>(
     key: T,

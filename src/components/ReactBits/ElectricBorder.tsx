@@ -6,7 +6,7 @@
  * https://codepen.io/BalintFerenczy/pen/KwdoyEN
  */
 
-import React, { useEffect, useId, useLayoutEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties, PropsWithChildren } from 'react';
 
 type ElectricBorderProps = PropsWithChildren<{
@@ -49,7 +49,7 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const strokeRef = useRef<HTMLDivElement | null>(null);
 
-  const updateAnim = () => {
+  const updateAnim = useCallback(() => {
     const svg = svgRef.current;
     const host = rootRef.current;
     if (!svg || !host) return;
@@ -89,19 +89,21 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
     }
 
     requestAnimationFrame(() => {
-      [...dyAnims, ...dxAnims].forEach((a: any) => {
+      [...dyAnims, ...dxAnims].forEach((a: SVGAnimateElement) => {
         if (typeof a.beginElement === 'function') {
           try {
             a.beginElement();
-          } catch {}
+          } catch (error) {
+            console.warn('Failed to begin animation element:', error);
+          }
         }
       });
     });
-  };
+  }, [speed, chaos, filterId]);
 
   useEffect(() => {
     updateAnim();
-  }, [speed, chaos]);
+  }, [speed, chaos, updateAnim]);
 
   useLayoutEffect(() => {
     if (!rootRef.current) return;
@@ -109,7 +111,7 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
     ro.observe(rootRef.current);
     updateAnim();
     return () => ro.disconnect();
-  }, []);
+  }, [updateAnim]);
 
   const inheritRadius: CSSProperties = {
     borderRadius: style?.borderRadius ?? 'inherit'

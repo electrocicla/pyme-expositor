@@ -10,7 +10,7 @@ import { SectionHeader, Section, InfoBox } from '../shared';
 
 interface FooterSocialTabProps {
   footer: FooterConfig;
-  onUpdate: (key: string, value: any) => void;
+  onUpdate: (key: string, value: unknown) => void;
 }
 
 export const FooterSocialTab: React.FC<FooterSocialTabProps> = ({ footer, onUpdate }) => {

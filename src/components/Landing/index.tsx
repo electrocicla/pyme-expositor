@@ -119,12 +119,7 @@ const LandingContent: React.FC = () => {
     
     return sorted;
   }, [
-    config?.sections?.header?.enabled, config?.sections?.header?.order,
-    config?.sections?.hero?.enabled, config?.sections?.hero?.order,
-    config?.sections?.features?.enabled, config?.sections?.features?.order,
-    config?.sections?.gallery?.enabled, config?.sections?.gallery?.order,
-    config?.sections?.location?.enabled, config?.sections?.location?.order,
-    config?.sections?.footer?.enabled, config?.sections?.footer?.order,
+    config?.sections,
   ]);
 
   // Load Google Font
