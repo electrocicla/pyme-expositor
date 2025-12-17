@@ -47,7 +47,7 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info'; onC
   };
 
   return (
-    <div className={`fixed top-4 right-4 z-[100] flex items-center gap-2 px-4 py-3 rounded-lg border text-white text-sm font-medium shadow-lg backdrop-blur-sm animate-fade-in ${colors[type]}`}>
+    <div className={`fixed top-4 right-4 z-100 flex items-center gap-2 px-4 py-3 rounded-lg border text-white text-sm font-medium shadow-lg backdrop-blur-sm animate-fade-in ${colors[type]}`}>
       {icons[type]}
       {message}
     </div>
@@ -108,7 +108,7 @@ const tabIcons: Record<Tab, ReactNode> = {
   ),
 };
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ isExpanded: boolean; onToggleExpand: () => void }> = ({ isExpanded, onToggleExpand }) => {
   const [activeTab, setActiveTab] = useState<Tab>('hero');
   const [localSaving, setLocalSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -183,112 +183,131 @@ export const Sidebar: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="p-4 border-b border-white/10 bg-slate-800/50">
+      <div className="p-4 border-b border-white/10 bg-slate-800/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
             </svg>
           </div>
-          <div>
-            <h2 className="font-bold text-white">Site Editor</h2>
-            <p className="text-xs text-slate-400">Visual page builder</p>
-          </div>
+          {isExpanded && (
+            <div>
+              <h2 className="font-bold text-white">Site Editor</h2>
+              <p className="text-xs text-slate-400">Visual page builder</p>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Main Tabs */}
-      <div className="flex border-b border-white/10 bg-slate-800/30">
         <button
-          onClick={() => setActiveTab('media')}
-          className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
-            activeTab === 'media' ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-400 hover:text-slate-200'
-          }`}
+          onClick={onToggleExpand}
+          className="p-1.5 hover:bg-slate-700/50 rounded-lg transition-all duration-200 text-slate-400 hover:text-white"
+          title={isExpanded ? 'Collapse panel' : 'Expand panel'}
+          aria-label={isExpanded ? 'Collapse panel' : 'Expand panel'}
         >
-          {tabIcons.media}
-          <span>Media</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('theme')}
-          className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
-            isStylesActive ? 'text-purple-400 bg-purple-500/10' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          {tabIcons.theme}
-          <span>Styles</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('hero')}
-          className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
-            isSectionsActive ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+          <svg
+            className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-0' : 'rotate-180'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Sections</span>
         </button>
       </div>
 
-      {/* Styles Sub-tabs */}
-      {isStylesActive && (
-        <div className="flex border-b border-white/10 overflow-x-auto bg-slate-900/50 scrollbar-hide">
-          <button
-            onClick={() => setActiveTab('theme')}
-            className={`relative flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
-              activeTab === 'theme' ? 'text-purple-400' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Theme
-            {activeTab === 'theme' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
-          </button>
-          <button
-            onClick={() => setActiveTab('effects')}
-            className={`relative flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
-              activeTab === 'effects' ? 'text-purple-400' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Effects
-            {activeTab === 'effects' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
-          </button>
-        </div>
-      )}
-
-      {/* Sections Sub-tabs */}
-      {isSectionsActive && (
-        <div className="flex border-b border-white/10 overflow-x-auto bg-slate-900/50 scrollbar-hide">
-          {sectionTabs.map((tab) => (
+      {/* Main Tabs - Hidden when collapsed */}
+      {isExpanded && (
+        <>
+          <div className="flex border-b border-white/10 bg-slate-800/30">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative flex-1 px-3 py-2.5 text-xs font-medium whitespace-nowrap flex items-center justify-center gap-1 transition-all duration-200 ${
-                activeTab === tab.id ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('media')}
+              className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                activeTab === 'media' ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {tabIcons[tab.id]}
-              <span>{tab.label}</span>
-              {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+              {tabIcons.media}
+              <span>Media</span>
             </button>
-          ))}
-        </div>
-      )}
+            <button
+              onClick={() => setActiveTab('theme')}
+              className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                isStylesActive ? 'text-purple-400 bg-purple-500/10' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {tabIcons.theme}
+              <span>Styles</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('hero')}
+              className={`flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                isSectionsActive ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+              </svg>
+              <span>Sections</span>
+            </button>
+          </div>
 
-      {/* Panel Content */}
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-        {activeTab === 'media' && <MediaPanel />}
-        {activeTab === 'theme' && <ThemePanel />}
-        {activeTab === 'effects' && <EffectsPanel />}
-        {activeTab === 'sections' && <SectionsPanel />}
-        {activeTab === 'header' && <HeaderPanel />}
-        {activeTab === 'hero' && <HeroPanel />}
-        {activeTab === 'features' && <FeaturesPanel />}
-        {activeTab === 'gallery' && <GalleryPanel />}
-        {activeTab === 'location' && <LocationPanel />}
-        {activeTab === 'footer' && <FooterPanel />}
-      </div>
+          {/* Styles Sub-tabs */}
+          {isStylesActive && (
+            <div className="flex border-b border-white/10 overflow-x-auto bg-slate-900/50 scrollbar-hide">
+              <button
+                onClick={() => setActiveTab('theme')}
+                className={`relative flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                  activeTab === 'theme' ? 'text-purple-400' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Theme
+                {activeTab === 'theme' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+              </button>
+              <button
+                onClick={() => setActiveTab('effects')}
+                className={`relative flex-1 px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                  activeTab === 'effects' ? 'text-purple-400' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Effects
+                {activeTab === 'effects' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+              </button>
+            </div>
+          )}
 
-      {/* Action Buttons - Fixed at Bottom */}
-      <div className="p-4 border-t border-white/10 bg-slate-900/95 space-y-3">
+          {/* Sections Sub-tabs */}
+          {isSectionsActive && (
+            <div className="flex border-b border-white/10 overflow-x-auto bg-slate-900/50 scrollbar-hide">
+              {sectionTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex-1 px-3 py-2.5 text-xs font-medium whitespace-nowrap flex items-center justify-center gap-1 transition-all duration-200 ${
+                    activeTab === tab.id ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {tabIcons[tab.id]}
+                  <span>{tab.label}</span>
+                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Panel Content */}
+          <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            {activeTab === 'media' && <MediaPanel />}
+            {activeTab === 'theme' && <ThemePanel />}
+            {activeTab === 'effects' && <EffectsPanel />}
+            {activeTab === 'sections' && <SectionsPanel />}
+            {activeTab === 'header' && <HeaderPanel />}
+            {activeTab === 'hero' && <HeroPanel />}
+            {activeTab === 'features' && <FeaturesPanel />}
+            {activeTab === 'gallery' && <GalleryPanel />}
+            {activeTab === 'location' && <LocationPanel />}
+            {activeTab === 'footer' && <FooterPanel />}
+          </div>
+
+          {/* Action Buttons - Fixed at Bottom */}
+          <div className="p-4 border-t border-white/10 bg-slate-900/95 space-y-3">
         {/* Status indicator */}
         <div className="flex items-center justify-between text-xs">
           <span className={`flex items-center gap-1.5 ${
@@ -370,6 +389,8 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

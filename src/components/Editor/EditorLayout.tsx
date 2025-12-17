@@ -6,6 +6,7 @@ import { ConfigProvider } from '../../contexts/ConfigContext';
 export const EditorLayout: React.FC = () => {
   const [previewScale, setPreviewScale] = useState(0.85);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   const deviceWidths = {
     desktop: '100%',
@@ -16,8 +17,12 @@ export const EditorLayout: React.FC = () => {
   return (
     <ConfigProvider mode="editor">
       <div className="flex h-screen overflow-hidden bg-slate-950">
-        {/* Sidebar with glassmorphism */}
-        <Sidebar />
+        {/* Sidebar with smooth collapse animation */}
+        <div className={`transition-all duration-300 ease-out overflow-hidden ${
+          isSidebarExpanded ? 'w-80' : 'w-0'
+        }`}>
+          <Sidebar isExpanded={isSidebarExpanded} onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)} />
+        </div>
         
         {/* Preview Area */}
         <div className="flex-1 flex flex-col overflow-hidden">

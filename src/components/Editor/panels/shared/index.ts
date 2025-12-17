@@ -22,6 +22,7 @@ export { PanelHeader, default as PanelHeaderComponent } from './PanelHeader';
 export { InfoBox, default as InfoBoxComponent } from './InfoBox';
 export { PresetButton, default as PresetButtonComponent } from './PresetButton';
 export { SectionStatusControl, default as SectionStatusControlComponent } from './SectionStatusControl';
+export { CollapsiblePanel, default as CollapsiblePanelComponent } from './CollapsiblePanel';
 
 // Types
 export type { 
