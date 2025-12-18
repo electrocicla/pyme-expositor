@@ -13,6 +13,12 @@ interface ConfigContextType {
   isDirty: boolean;
   isSaving: boolean;
   lastSaved: Date | null;
+  // Undo/Redo functionality
+  canUndo: boolean;
+  canRedo: boolean;
+  undo: () => void;
+  redo: () => void;
+  resetHistory: () => void;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -34,11 +40,66 @@ const deepMerge = <T extends Record<string, unknown>>(target: T, source: Partial
 };
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public' | 'editor' }> = ({ children, mode }) => {
-  const [config, setConfig] = useState<SiteConfig>(defaultConfig);
+  // Custom undo/redo state management
+  const [config, setConfigState] = useState<SiteConfig>(defaultConfig);
+  const [history, setHistory] = useState<SiteConfig[]>([defaultConfig]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Undo/Redo functionality
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (canUndo) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setConfigState(history[newIndex]);
+    }
+  }, [canUndo, historyIndex, history]);
+
+  const redo = useCallback(() => {
+    if (canRedo) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setConfigState(history[newIndex]);
+    }
+  }, [canRedo, historyIndex, history]);
+
+  const resetHistory = useCallback(() => {
+    setHistory([config]);
+    setHistoryIndex(0);
+  }, [config]);
+
+  // Enhanced setConfig with history tracking
+  const setConfig = useCallback((newConfig: SiteConfig | ((prev: SiteConfig) => SiteConfig)) => {
+    setConfigState(currentConfig => {
+      const resolvedConfig = typeof newConfig === 'function' ? newConfig(currentConfig) : newConfig;
+
+      // Only add to history if the config actually changed
+      if (JSON.stringify(resolvedConfig) !== JSON.stringify(currentConfig)) {
+        setHistory(prevHistory => {
+          // Remove any history after current index (for when we're not at the end)
+          const newHistory = prevHistory.slice(0, historyIndex + 1);
+          // Add the new state
+          newHistory.push(resolvedConfig);
+          // Limit history to 50 states to prevent memory issues
+          if (newHistory.length > 50) {
+            newHistory.shift();
+            setHistoryIndex(newHistory.length - 1);
+          } else {
+            setHistoryIndex(newHistory.length - 1);
+          }
+          return newHistory;
+        });
+      }
+
+      return resolvedConfig;
+    });
+  }, [historyIndex]);
   
   // Refs for stable references
   const configRef = useRef(config);
@@ -177,6 +238,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
       isDirty,
       isSaving,
       lastSaved,
+      canUndo,
+      canRedo,
+      undo,
+      redo,
+      resetHistory,
     }}>
       {children}
     </ConfigContext.Provider>

@@ -3,6 +3,8 @@ import type { SiteConfig, HeroConfig } from '../../types/config';
 import { useConfig } from '../../contexts/ConfigContext';
 import Landing from '../Landing/index';
 import { api } from '../../utils/api';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { UndoRedoControls } from './UndoRedoControls';
 import {
   Menu,
   Monitor,
@@ -41,6 +43,9 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
 
   const updateConfig = useCallback(<K extends keyof SiteConfig>(
     section: K,
@@ -527,6 +532,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
         <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <h3 className="font-medium text-slate-900">Live Preview</h3>
+            <UndoRedoControls />
             <button
               onClick={() => setIsPreviewMode(!isPreviewMode)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
