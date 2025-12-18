@@ -57,7 +57,7 @@ export const ExamplePanelUsage: React.FC = () => {
         colorScheme="warning"
         onChange={(isOpen) => {
           if (isOpen) {
-            console.log('Section expanded - load more data if needed');
+            console.warn('Section expanded - load more data if needed');
           }
         }}
       >
@@ -110,7 +110,7 @@ export const SomePanelWithCollapsibles: React.FC = () => {
       [section]: isOpen,
     }));
     // Optional: Analytics or state tracking
-    console.log(`${section} section ${isOpen ? 'opened' : 'closed'}`);
+    console.warn(`${section} section ${isOpen ? 'opened' : 'closed'}`);
   };
 
   return (

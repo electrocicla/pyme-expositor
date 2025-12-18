@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist', 'node_modules', '.wrangler', '.vscode'] },
+  { ignores: ['dist', 'node_modules', '.wrangler', '.vscode', 'worker/worker-configuration.d.ts', 'worker/**/*.d.ts', 'worker/public/assets/**', 'worker/vitest.config.js'] },
   // Include recommended JS and TypeScript configs directly (flat config style)
   js.configs.recommended,
   ...ts.configs.recommended,
