@@ -15,6 +15,16 @@ interface GalleryItem {
   height?: number;
 }
 
+interface ItemPosition {
+  position: 'absolute';
+  left: string;
+  top: string;
+  width: string;
+  opacity: number;
+  transform: string;
+  transition: string;
+}
+
 interface MasonryGalleryProps {
   items: GalleryItem[];
   columns?: number;
@@ -63,39 +73,47 @@ export function MasonryGallery({
     setLoadedImages(prev => new Set(prev).add(itemId));
   };
 
-  const getItemStyle = (item: GalleryItem) => {
-    if (!loadedImages.has(item.id)) {
-      return {
-        opacity: 0,
-        transform: 'translateY(20px)',
+  const [itemPositions, setItemPositions] = useState<Record<string, ItemPosition>>({});
+
+  // Calculate item positions when items or columns change
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const newPositions: Record<string, ItemPosition> = {};
+    const tempColumnHeights = new Array(responsiveColumns).fill(0);
+
+    items.forEach((item) => {
+      const shortestColumnIndex = tempColumnHeights.indexOf(Math.min(...tempColumnHeights));
+
+      // Calculate position
+      const columnWidth = `calc(${100 / responsiveColumns}% - ${(gap * (responsiveColumns - 1)) / responsiveColumns}px)`;
+      const left = `calc(${shortestColumnIndex * (100 / responsiveColumns)}% + ${shortestColumnIndex * gap}px)`;
+
+      // Update column height (approximate based on aspect ratio)
+      const aspectRatio = item.width && item.height ? item.height / item.width : 1;
+      const estimatedHeight = 300 * aspectRatio; // assuming base width of 300px
+
+      newPositions[item.id] = {
+        position: 'absolute' as const,
+        left,
+        top: `${tempColumnHeights[shortestColumnIndex]}px`,
+        width: columnWidth,
+        opacity: loadedImages.has(item.id) ? 1 : 0,
+        transform: loadedImages.has(item.id) ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.5s ease, transform 0.5s ease',
       };
-    }
 
-    // Calculate which column this item goes in (shortest column)
-    const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
-
-    // Calculate position
-    const columnWidth = `calc(${100 / responsiveColumns}% - ${(gap * (responsiveColumns - 1)) / responsiveColumns}px)`;
-    const left = `calc(${shortestColumnIndex * (100 / responsiveColumns)}% + ${shortestColumnIndex * gap}px)`;
-
-    // Update column height (approximate based on aspect ratio)
-    const aspectRatio = item.width && item.height ? item.height / item.width : 1;
-    const estimatedHeight = 300 * aspectRatio; // assuming base width of 300px
-
-    setColumnHeights(prev => {
-      const newHeights = [...prev];
-      newHeights[shortestColumnIndex] += estimatedHeight + gap;
-      return newHeights;
+      tempColumnHeights[shortestColumnIndex] += estimatedHeight + gap;
     });
 
-    return {
-      position: 'absolute' as const,
-      left,
-      top: `${columnHeights[shortestColumnIndex]}px`,
-      width: columnWidth,
-      opacity: 1,
-      transform: 'translateY(0)',
+    setItemPositions(newPositions);
+    setColumnHeights(tempColumnHeights);
+  }, [items, responsiveColumns, gap, loadedImages]);
+
+  const getItemStyle = (item: GalleryItem) => {
+    return itemPositions[item.id] || {
+      opacity: 0,
+      transform: 'translateY(20px)',
       transition: 'opacity 0.5s ease, transform 0.5s ease',
     };
   };

@@ -375,6 +375,49 @@ This file records each UI component, responsibilities, current status, and follo
   - Notes: Heavy.
   - Actions: Lazy load.
 
+### New ReactBits Components (2025-12-18)
+- `src/components/ReactBits/TypewriterText.tsx`
+  - Role: Animated typewriter effect with customizable speed, delay, loop, and cursor options.
+  - Tests: yes (10 tests - comprehensive coverage of props, callbacks, loop behavior, accessibility)
+  - Notes: Performance optimized, respects reduced motion, includes accessibility features.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/WaveSeparator.tsx`
+  - Role: SVG wave separators between sections with multiple variants and animations.
+  - Tests: yes (14 tests - rendering, variants, animations, accessibility, cleanup)
+  - Notes: Lightweight SVG-based, multiple variants, smooth animations.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/Lightbox.tsx`
+  - Role: Modal image/video viewer with keyboard navigation, zoom, and rotation controls.
+  - Tests: yes (26 tests - modal functionality, navigation, zoom, keyboard controls, accessibility)
+  - Notes: Full accessibility support, keyboard navigation, touch gestures.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/VideoHero.tsx`
+  - Role: Video background hero component with overlay content and playback controls.
+  - Tests: yes (23 tests - video background, controls, loading states, error handling)
+  - Notes: Optimized video loading, fallback support, accessibility compliant.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/KenBurns.tsx`
+  - Role: Ken Burns effect for smooth image zoom and pan animations.
+  - Tests: yes (11 tests - rendering, props, styling, loading states, error handling)
+  - Notes: Smooth animations, respects reduced motion, optimized performance.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/ParticleOverlay.tsx`
+  - Role: Animated floating particles background effect with customizable density and colors.
+  - Tests: yes (8 tests - canvas rendering, custom props, performance)
+  - Notes: Canvas-based, respects reduced motion, performance optimized.
+  - Actions: None - fully tested and production ready.
+
+- `src/components/ReactBits/MasonryGallery.tsx`
+  - Role: Responsive masonry layout gallery with lazy loading and hover effects.
+  - Tests: yes (18 tests - responsive layout, image loading, click handling, lazy loading)
+  - Notes: Responsive design, lazy loading, accessibility compliant.
+  - Actions: None - fully tested and production ready.
+
 ---
 
 ## Next steps (in-progress)

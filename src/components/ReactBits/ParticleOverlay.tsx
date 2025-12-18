@@ -3,7 +3,7 @@
  * Single Responsibility: Create animated floating particles background effect
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface Particle {
   id: number;
@@ -39,7 +39,7 @@ export function ParticleOverlay({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   // Initialize particles
-  const initParticles = (width: number, height: number) => {
+  const initParticles = useCallback((width: number, height: number) => {
     const area = (width * height) / 1000000; // area in 1000px² units
     const particleCount = Math.floor(density * area);
 
@@ -57,7 +57,7 @@ export function ParticleOverlay({
       });
     }
     return newParticles;
-  };
+  }, [density, colors, size.min, size.max, speed.min, speed.max]);
 
   // Update canvas size
   useEffect(() => {
@@ -90,7 +90,7 @@ export function ParticleOverlay({
     if (dimensions.width > 0 && dimensions.height > 0) {
       setParticles(initParticles(dimensions.width, dimensions.height));
     }
-  }, [dimensions, density, colors, size.min, size.max]);
+  }, [dimensions, initParticles]);
 
   // Animation loop
   useEffect(() => {

@@ -3,7 +3,7 @@
  * Comprehensive test coverage for Ken Burns effect on single images
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { KenBurns } from './KenBurns';
@@ -16,16 +16,16 @@ const mockKenBurnsProps = {
 };
 
 describe('KenBurns', () => {
-  let mockImage: any;
+  let mockImage: jest.MockedClass<typeof Image>;
 
   beforeEach(() => {
     vi.useFakeTimers();
     // Mock the Image constructor
-    mockImage = vi.fn().mockImplementation(function(this: any) {
+    mockImage = vi.fn().mockImplementation(function(this: HTMLImageElement) {
       this.onload = null;
       this.src = '';
       return this;
-    });
+    }) as jest.MockedClass<typeof Image>;
     global.Image = mockImage;
   });
 

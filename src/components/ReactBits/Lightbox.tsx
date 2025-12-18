@@ -47,6 +47,32 @@ export function Lightbox({
     }
   }, [isOpen, initialIndex]);
 
+  const goToPrevious = useCallback(() => {
+    if (media.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev === 0 ? media.length - 1 : prev - 1));
+      setZoom(1);
+      setRotation(0);
+      setIsTransitioning(false);
+    }, 150);
+  }, [media.length]);
+
+  const goToNext = useCallback(() => {
+    if (media.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev === media.length - 1 ? 0 : prev + 1));
+      setZoom(1);
+      setRotation(0);
+      setIsTransitioning(false);
+    }, 150);
+  }, [media.length]);
+
+  const handleZoom = useCallback((delta: number) => {
+    setZoom(prev => Math.max(0.25, Math.min(3, prev + delta)));
+  }, []);
+
   // Handle keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
@@ -78,33 +104,7 @@ export function Lightbox({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, media.length]);
-
-  const goToPrevious = useCallback(() => {
-    if (media.length <= 1) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex(prev => (prev === 0 ? media.length - 1 : prev - 1));
-      setZoom(1);
-      setRotation(0);
-      setIsTransitioning(false);
-    }, 150);
-  }, [media.length]);
-
-  const goToNext = useCallback(() => {
-    if (media.length <= 1) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex(prev => (prev === media.length - 1 ? 0 : prev + 1));
-      setZoom(1);
-      setRotation(0);
-      setIsTransitioning(false);
-    }, 150);
-  }, [media.length]);
-
-  const handleZoom = (delta: number) => {
-    setZoom(prev => Math.max(0.25, Math.min(3, prev + delta)));
-  };
+  }, [isOpen, currentIndex, media.length, goToNext, goToPrevious, onClose, handleZoom]);
 
   const resetTransform = () => {
     setZoom(1);
