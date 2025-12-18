@@ -1,6 +1,6 @@
 # Expositor - Media Showcase Platform
 
-Una aplicación moderna y responsive para exponer y gestionar colecciones de medios (imágenes y videos). Construida con React, TypeScript, Tailwind CSS y desplegada en Cloudflare Workers.
+Una aplicación moderna y responsive para exponer y gestionar colecciones de medios (imágenes y videos). Construida con React 19, TypeScript, Tailwind CSS, y desplegada en Cloudflare Workers con almacenamiento R2.
 
 ## 🚀 Características
 
@@ -9,108 +9,145 @@ Una aplicación moderna y responsive para exponer y gestionar colecciones de med
 - **Media Management**: Upload, editar y eliminar imágenes y videos
 - **Authentication**: Sistema de login seguro con tokens JWT
 - **Storage**: Integración con Cloudflare R2 para almacenamiento
-# PyME Expositor
+- **ReactBits Components**: Biblioteca completa de componentes animados y visuales
+- **Editor Visual**: Interfaz de arrastrar y soltar para configuración
+- **Testing Completo**: 299+ tests con Vitest y React Testing Library
+- **CI/CD**: GitHub Actions con linting, typecheck, testing y deployment automático
 
-A lightweight editor + showcase web app for small businesses and creators. The app includes a React + TypeScript frontend (Vite), and a Cloudflare Workers backend (Hono) using D1 for structured data and R2 for media storage.
+## 🛠️ Stack Tecnológico
 
-This repository contains the frontend app and the Worker source under the `worker/` directory.
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
+- **Backend**: Cloudflare Workers (Hono), D1 Database, R2 Storage
+- **Testing**: Vitest, React Testing Library, Playwright
+- **Deployment**: Cloudflare Pages + Workers
+- **CI/CD**: GitHub Actions
 
-## Key features
-- Draft / Publish workflow for site configuration
-- Media management (upload, reorder, delete) backed by R2
-- JWT-based admin authentication for protected endpoints
-- Vite + React + TypeScript development stack
+## 📦 Instalación y Configuración
 
-## Quick start (development)
+### Prerrequisitos
 
-Prerequisites
-- Node.js 16+ (recommended)
-- pnpm
-- Cloudflare account (for D1, R2, Workers, Pages)
-- Wrangler CLI (for Worker/D1 operations)
+- Node.js 18+
+- pnpm 8+
+- Cuenta Cloudflare (Workers, R2, D1)
 
-Install dependencies
+### Instalación Rápida
 
-```powershell
+```bash
+# Clonar repositorio
+git clone https://github.com/electrocicla/pyme-expositor.git
+cd pyme-expositor
+
+# Instalar dependencias
 pnpm install
+cd worker && pnpm install && cd ..
+
+# Configurar variables de entorno
+cp worker/.env.example worker/.env
+# Editar worker/.env con tus valores seguros
+
+# Iniciar desarrollo
+pnpm dev          # Frontend (puerto 5173)
+cd worker && pnpm dev  # Worker (puerto 8787)
 ```
 
-Run frontend dev server
+### Variables de Entorno
 
-```powershell
-pnpm run dev
+Crear `worker/.env` basado en `worker/.env.example`:
+
+```bash
+JWT_SECRET=tu-secreto-super-seguro-aqui
+ENVIRONMENT=development
 ```
 
-Run the worker locally (in a second terminal)
+## 🧪 Testing
 
-```powershell
-cd worker
-pnpm install
-pnpm run dev
+```bash
+# Tests completos
+pnpm test
+
+# Tests del worker
+cd worker && pnpm test
+
+# Coverage
+pnpm test --coverage
 ```
 
-The frontend proxies `/api/*` to the local Worker in development.
+## 🚀 Build & Deploy
 
-## Build & deploy
+```bash
+# Build
+pnpm build
 
-Build the frontend
+# Deploy completo (Pages + Worker)
+pnpm deploy
 
-```powershell
-pnpm run build
+# Deploy individual
+pnpm deploy:pages
+pnpm deploy:worker
 ```
 
-Deploy the frontend to Cloudflare Pages and the Worker (there are npm scripts):
-
-```powershell
-pnpm run deploy:pages   # build and deploy Pages
-pnpm run deploy:worker  # deploy the Worker (from worker/)
-# or run full deploy
-pnpm run deploy
-```
-
-## Useful scripts (from `package.json`)
-- `pnpm run dev` — start frontend dev server
-- `pnpm run build` — typecheck and build frontend
-- `pnpm run typecheck` — run TypeScript type checks
-- `pnpm run deploy:pages` — build + deploy Pages
-- `pnpm run deploy:worker` — deploy Worker
-- `pnpm run deploy` — full deploy (Pages + Worker)
-
-## Project layout
+## 📁 Estructura del Proyecto
 
 ```
-.
-├── src/                # Frontend source (React + TS)
-├── worker/             # Worker source, schema.sql, wrangler.jsonc
-└── public/             # Static assets
+├── src/
+│   ├── components/
+│   │   ├── ReactBits/          # Biblioteca de componentes animados
+│   │   ├── Editor/             # Editor visual
+│   │   ├── Landing/            # Páginas públicas
+│   │   └── ...
+│   ├── hooks/                  # Custom hooks
+│   ├── services/               # API services
+│   └── types/                  # TypeScript definitions
+├── worker/                     # Cloudflare Worker backend
+│   ├── src/
+│   ├── test/
+│   └── wrangler.jsonc
+├── public/                     # Assets estáticos
+└── dist/                       # Build output
 ```
 
-## Configuration notes
-- Worker config and bindings are in `worker/wrangler.jsonc`.
-- Set `JWT_SECRET` and other sensitive values in Cloudflare dashboard or secure env.
-- Initialize D1 schema with `wrangler d1 execute expositor-db --file worker/schema.sql`.
+## 🎨 ReactBits Components
 
-## API (high level)
-- `GET /api/media` — list public media
-- `GET /api/config` — get published config (landing)
-- `GET /api/config/draft` — get draft config (editor)
-- `POST /api/config` — save draft (requires auth)
-- `POST /api/config/publish` — publish draft to public (requires auth)
+Biblioteca completa de componentes visuales:
 
-See `worker/src/index.ts` for full endpoint details.
+- AnimatedGradient, AuroraBackground, FloatingParticles
+- GlassCard, ElectricBorder, ClickSpark
+- TypewriterText, KenBurns, VideoHero
+- MasonryGallery, Lightbox, WaveSeparator
+- Y muchos más...
 
-## License
-This project is licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). See the `LICENSE` file for details.
+## 🔐 API Endpoints
 
-If you are the project owner and want a different license for code (e.g. MIT), update the `LICENSE` and README accordingly before publishing.
+- `GET /api/media` — Listar medios públicos
+- `GET /api/config` — Obtener configuración publicada
+- `POST /api/config` — Guardar borrador (requiere auth)
+- `POST /api/config/publish` — Publicar configuración (requiere auth)
+- `POST /api/media` — Upload de archivos (requiere auth)
 
-## Contributing
-- Fork the repo, create a feature branch, and open a pull request.
+## 📊 Estado del Proyecto
 
-## Support
-Open an issue after creating the GitHub repository and link it here.
+- ✅ ReactBits components (6 componentes, 110 tests)
+- ✅ Sistema de autenticación JWT
+- ✅ Gestión de medios con R2
+- ✅ Editor visual completo
+- ✅ Testing completo (299 tests)
+- ✅ CI/CD pipeline
+- ✅ Seguridad: Variables de entorno
+- ✅ Build optimizado (chunks separados)
+
+## 🤝 Contribuir
+
+1. Fork el repositorio
+2. Crear rama de feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abrir Pull Request
+
+## 📄 Licencia
+
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
 ---
 
-Last updated: 2025-11-28
+**Última actualización**: Diciembre 2024
 ```bash
