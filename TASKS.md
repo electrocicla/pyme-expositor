@@ -42,7 +42,7 @@ Provide a clear, procedural roadmap to audit, fix, and improve the `pyme-exposit
 
 ### Phase 1: Core Editor Improvements (Start Here - High Impact, Medium Effort)
 
-- [ ] **Undo/Redo Infrastructure** (Easiest to implement)
+- [x] **Undo/Redo Infrastructure** (Easiest to implement)
   - Implement state history management with undo/redo functionality
   - Use libraries like `use-undoable-state` or implement custom solution
   - Add keyboard shortcuts (Ctrl+Z/Ctrl+Y)
