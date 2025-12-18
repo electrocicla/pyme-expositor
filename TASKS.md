@@ -30,7 +30,7 @@ Provide a clear, procedural roadmap to audit, fix, and improve the `pyme-exposit
 - [x] Component inventory and audit for `src/components`
 - [x] Create `TASKS.md` (this file)
 - [x] Fix high-priority technical debt (testing setup done with 189 tests across 18 test files, code-splitting implemented, manual chunking added, accessibility improved in all shared components, reduced motion support added; **testing coverage completed for all shared Editor components**, bundle optimizations implemented)
-- [in progress] Implement improvements & new components (created 6 new ReactBits components: TypewriterText, WaveSeparator, Lightbox, VideoHero, KenBurns, ParticleOverlay, MasonryGallery; added comprehensive index.ts exports; **completed comprehensive test coverage for all ReactBits components with 110 tests across 7 test files**)
+- [x] Implement improvements & new components (created 6 new ReactBits components: TypewriterText, WaveSeparator, Lightbox, VideoHero, KenBurns, ParticleOverlay, MasonryGallery; added comprehensive index.ts exports; **completed comprehensive test coverage for all ReactBits components with 110 tests across 7 test files**)
 - [x] Add tests and CI
 - [x] Documentation & migration notes
 - [x] Final audit & performance testing
