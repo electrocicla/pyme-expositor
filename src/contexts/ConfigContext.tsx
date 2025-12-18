@@ -44,7 +44,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
   const [config, setConfigState] = useState<SiteConfig>(defaultConfig);
   const [history, setHistory] = useState<SiteConfig[]>([defaultConfig]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(mode === 'editor' ? false : true); // Editor starts with default config immediately
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -122,21 +122,40 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
 
   // Load config on mount
   useEffect(() => {
+    // In editor mode, we start with default config immediately and load draft in background
+    if (mode === 'editor') {
+      const fetchDraftConfig = async () => {
+        try {
+          console.warn(`ConfigContext: Fetching draft config in background...`);
+          const data = await api.getConfig('draft');
+          if (data && typeof data === 'object') {
+            const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
+            console.warn(`ConfigContext: Loaded draft config:`, mergedConfig);
+            setConfig(mergedConfig);
+          }
+        } catch (error) {
+          console.warn('ConfigContext: Failed to load draft config, using defaults:', error);
+          // Keep using defaultConfig on error
+        }
+      };
+      fetchDraftConfig();
+      return;
+    }
+
+    // Public mode: load published config and show loading state
     const fetchConfig = async () => {
       try {
-        const key = mode === 'editor' ? 'draft' : 'published';
-        console.warn(`ConfigContext: Fetching ${key} config...`);
-        const data = await api.getConfig(key);
-        console.warn(`ConfigContext: Raw ${key} config from API:`, data);
-        console.warn(`ConfigContext: Effects from API:`, data && typeof data === 'object' ? (data as Record<string, unknown>).effects : undefined);
+        console.warn(`ConfigContext: Fetching published config...`);
+        const data = await api.getConfig('published');
+        console.warn(`ConfigContext: Raw published config from API:`, data);
         // Always merge with defaultConfig to ensure all properties exist
         if (data && typeof data === 'object') {
           const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
-          console.warn(`ConfigContext: Merged config effects:`, mergedConfig.effects);
+          console.warn(`ConfigContext: Merged config:`, mergedConfig);
           setConfig(mergedConfig);
         }
       } catch (error) {
-        console.error('Failed to load config', error);
+        console.error('Failed to load published config', error);
         // Keep using defaultConfig on error
       } finally {
         setIsLoading(false);

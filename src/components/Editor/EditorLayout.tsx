@@ -173,9 +173,9 @@ const EditorContent: React.FC = () => {
               }}
             >
               <div className="w-full h-full bg-white rounded-lg overflow-hidden shadow-2xl border border-slate-800/50">
-                 <div className="w-full h-full overflow-y-auto custom-scrollbar bg-white">
-                    <Landing />
-                 </div>
+              <div className="w-full h-full overflow-y-auto custom-scrollbar bg-white">
+                 <Landing previewMode={true} />
+              </div>
               </div>
             </div>
         </div>
