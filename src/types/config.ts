@@ -6,7 +6,7 @@ export interface EffectsConfig {
   };
   background: {
     enabled: boolean;
-    type: 'gradient' | 'mesh' | 'aurora' | 'waves' | 'particles' | 'grid' | 'starfield' | 'orbs' | 'geometric' | 'noise';
+    type: 'gradient' | 'mesh' | 'aurora' | 'waves' | 'particles' | 'grid' | 'starfield' | 'orbs' | 'geometric' | 'noise' | 'particle-overlay';
     speed: 'slow' | 'normal' | 'fast';
   };
   cards: {
@@ -71,6 +71,13 @@ export interface HeroConfig {
   titleTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   subtitleWeight?: 'light' | 'normal' | 'medium' | 'semibold';
   subtitleOpacity?: '100' | '90' | '80' | '70' | '60' | '50';
+  // Typewriter Effects
+  titleTypewriter?: boolean;  // Enable typewriter effect for title
+  subtitleTypewriter?: boolean;  // Enable typewriter effect for subtitle
+  typewriterSpeed?: number;  // Characters per second (default: 50)
+  typewriterDelay?: number;  // Delay before starting animation (ms)
+  typewriterLoop?: boolean;  // Loop the animation
+  typewriterCursor?: boolean;  // Show blinking cursor
   // Spacing/Padding
   paddingY: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   paddingX: 'sm' | 'md' | 'lg' | 'xl';
@@ -417,6 +424,13 @@ export const defaultConfig: SiteConfig = {
     sliderShowDots: true,
     sliderShowArrows: true,
     sliderPauseOnHover: true,
+    // Typewriter effects
+    titleTypewriter: false,
+    subtitleTypewriter: false,
+    typewriterSpeed: 50,
+    typewriterDelay: 500,
+    typewriterLoop: false,
+    typewriterCursor: true,
   },
   gallery: {
     title: 'Selected Works',

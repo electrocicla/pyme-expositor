@@ -22,14 +22,17 @@ export function Select<T extends string = string>({
   className = '',
   error,
 }: SelectProps<T>): React.ReactElement {
+  const selectId = label ? `select-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined;
+
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-medium text-slate-300 mb-1.5">
+        <label htmlFor={selectId} className="block text-xs font-medium text-slate-300 mb-1.5">
           {label}
         </label>
       )}
       <select
+        id={selectId}
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
         disabled={disabled}

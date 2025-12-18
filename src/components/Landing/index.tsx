@@ -8,7 +8,7 @@
  * - DIP: Depends on abstractions (hooks/utils) not concretions
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { ConfigProvider, useConfig } from '../../contexts/ConfigContext';
 import { api, type ApiMedia } from '../../utils/api';
 import { loadGoogleFont } from '../../utils/fonts';
@@ -26,16 +26,18 @@ import GallerySection from './GallerySection';
 import LocationSection from './LocationSection';
 import FooterSection from './FooterSection';
 
-// Background Effects
-import WavesBackground from '../ReactBits/WavesBackground';
-import FloatingParticles from '../ReactBits/FloatingParticles';
-import AnimatedGrid from '../ReactBits/AnimatedGrid';
-import MeshGradient from '../ReactBits/MeshGradient';
-import AuroraBackground from '../ReactBits/AuroraBackground';
-import StarfieldBackground from '../ReactBits/StarfieldBackground';
-import GradientOrbsBackground from '../ReactBits/GradientOrbsBackground';
-import GeometricBackground from '../ReactBits/GeometricBackground';
-import NoiseBackground from '../ReactBits/NoiseBackground';
+// Background Effects (lazy-loaded for performance)
+const AuroraBackground = lazy(() => import('../ReactBits/AuroraBackground'));
+const WavesBackground = lazy(() => import('../ReactBits/WavesBackground'));
+const FloatingParticles = lazy(() => import('../ReactBits/FloatingParticles'));
+const AnimatedGrid = lazy(() => import('../ReactBits/AnimatedGrid'));
+const MeshGradient = lazy(() => import('../ReactBits/MeshGradient'));
+const StarfieldBackground = lazy(() => import('../ReactBits/StarfieldBackground'));
+const GradientOrbsBackground = lazy(() => import('../ReactBits/GradientOrbsBackground'));
+const GeometricBackground = lazy(() => import('../ReactBits/GeometricBackground'));
+const NoiseBackground = lazy(() => import('../ReactBits/NoiseBackground'));
+const WaveSeparator = lazy(() => import('../ReactBits/WaveSeparator'));
+const ParticleOverlay = lazy(() => import('../ReactBits/ParticleOverlay'));
 import { lightenColor } from '../../utils/colors';
 
 import type { SectionsConfig } from '../../types/config';
@@ -235,101 +237,129 @@ const LandingContent: React.FC = () => {
 
       {/* Global Background Effects Layer - Now with proper z-index */}
       {effects.background.enabled && (
-        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-          {effects.background.type === 'aurora' && (
-            <AuroraBackground 
-              primaryColor={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              speed={effects.background.speed}
-              intensity={0.8}
-            />
-          )}
-          {effects.background.type === 'waves' && (
-            <WavesBackground 
-              primaryColor={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              speed={effects.background.speed}
-              opacity={0.6}
-            />
-          )}
-          {effects.background.type === 'particles' && (
-            <FloatingParticles 
-              count={80}
-              color={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              speed={effects.background.speed}
-              showConnections={true}
-            />
-          )}
-          {effects.background.type === 'grid' && (
-            <AnimatedGrid 
-              color={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              speed={effects.background.speed}
-              cellSize={60}
-            />
-          )}
-          {effects.background.type === 'mesh' && (
-            <MeshGradient 
-              colors={[theme.primaryColor, theme.secondaryColor, lightenColor(theme.primaryColor, 30)]}
-              speed={effects.background.speed}
-              blobCount={5}
-              opacity={0.7}
-            />
-          )}
-          {effects.background.type === 'starfield' && (
-            <StarfieldBackground 
-              starCount={250}
-              speed={effects.background.speed}
-              color={theme.primaryColor}
-              showShootingStars={true}
-            />
-          )}
-          {effects.background.type === 'orbs' && (
-            <GradientOrbsBackground 
-              primaryColor={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              tertiaryColor={lightenColor(theme.primaryColor, 30)}
-              speed={effects.background.speed}
-              orbCount={6}
-              blur={100}
-            />
-          )}
-          {effects.background.type === 'geometric' && (
-            <GeometricBackground 
-              primaryColor={theme.primaryColor}
-              secondaryColor={theme.secondaryColor}
-              speed={effects.background.speed}
-              shapeCount={20}
-            />
-          )}
-          {effects.background.type === 'noise' && (
-            <NoiseBackground 
-              opacity={0.1}
-              speed={effects.background.speed}
-              color={theme.primaryColor}
-              blend="overlay"
-            />
-          )}
-        </div>
+        <Suspense fallback={<div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }} />}>
+          <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+            {effects.background.type === 'aurora' && (
+              <AuroraBackground 
+                primaryColor={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                speed={effects.background.speed}
+                intensity={0.8}
+              />
+            )}
+            {effects.background.type === 'waves' && (
+              <WavesBackground 
+                primaryColor={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                speed={effects.background.speed}
+                opacity={0.6}
+              />
+            )}
+            {effects.background.type === 'particles' && (
+              <FloatingParticles 
+                count={80}
+                color={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                speed={effects.background.speed}
+                showConnections={true}
+              />
+            )}
+            {effects.background.type === 'grid' && (
+              <AnimatedGrid 
+                color={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                speed={effects.background.speed}
+                cellSize={60}
+              />
+            )}
+            {effects.background.type === 'mesh' && (
+              <MeshGradient 
+                colors={[theme.primaryColor, theme.secondaryColor, lightenColor(theme.primaryColor, 30)]}
+                speed={effects.background.speed}
+                blobCount={5}
+                opacity={0.7}
+              />
+            )}
+            {effects.background.type === 'starfield' && (
+              <StarfieldBackground 
+                starCount={250}
+                speed={effects.background.speed}
+                color={theme.primaryColor}
+                showShootingStars={true}
+              />
+            )}
+            {effects.background.type === 'orbs' && (
+              <GradientOrbsBackground 
+                primaryColor={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                tertiaryColor={lightenColor(theme.primaryColor, 30)}
+                speed={effects.background.speed}
+                orbCount={6}
+                blur={100}
+              />
+            )}
+            {effects.background.type === 'geometric' && (
+              <GeometricBackground 
+                primaryColor={theme.primaryColor}
+                secondaryColor={theme.secondaryColor}
+                speed={effects.background.speed}
+                shapeCount={20}
+              />
+            )}
+            {effects.background.type === 'noise' && (
+              <NoiseBackground 
+                opacity={0.1}
+                speed={effects.background.speed}
+                color={theme.primaryColor}
+                blend="overlay"
+              />
+            )}
+            {effects.background.type === 'particle-overlay' && (
+              <ParticleOverlay
+                density={0.0001}
+                speed={{ min: 0.5, max: 2 }}
+                colors={[theme.primaryColor, theme.secondaryColor]}
+                size={{ min: 2, max: 4 }}
+                className="opacity-60"
+              />
+            )}
+          </div>
+        </Suspense>
       )}
 
       {/* Global floating particles (separate from background effects) */}
       {effects.particles.enabled && (
-        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-          <FloatingParticles 
-            count={effects.particles.count}
-            color={effects.particles.color}
-            secondaryColor={theme.secondaryColor}
-            speed="normal"
-            showConnections={false}
-          />
-        </div>
+        <Suspense fallback={<div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }} />}>
+          <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+            <FloatingParticles 
+              count={effects.particles.count}
+              color={effects.particles.color}
+              secondaryColor={theme.secondaryColor}
+              speed="normal"
+              showConnections={false}
+            />
+          </div>
+        </Suspense>
       )}
 
       {/* Page Content - rendered in order based on config */}
       <div className="relative" style={{ zIndex: 2 }}>
-        {sortedSections.map(renderSection)}
+        {sortedSections.map((sectionKey, index) => (
+          <React.Fragment key={sectionKey}>
+            {renderSection(sectionKey)}
+            {index < sortedSections.length - 1 && (
+              <Suspense fallback={<div className="h-16 bg-gradient-to-b from-transparent to-slate-50" />}>
+                <WaveSeparator
+                  variant="both"
+                  color={theme.primaryColor}
+                  height={80}
+                  animated={true}
+                  className="my-8"
+                />
+              </Suspense>
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );

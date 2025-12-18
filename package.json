@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "test": "vitest",
     "preview": "vite preview",
     "deploy:pages": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor",
     "deploy:worker": "cd worker && pnpm run deploy",
@@ -24,6 +25,9 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@tailwindcss/vite": "^4.1.15",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
@@ -32,11 +36,13 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "jsdom": "^27.3.0",
     "tailwindcss": "^4.1.15",
     "terser": "^5.44.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
     "vite": "npm:rolldown-vite@7.1.14",
+    "vitest": "^4.0.16",
     "wrangler": "^4.51.0"
   },
   "pnpm": {

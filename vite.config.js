@@ -22,6 +22,32 @@ export default defineConfig({
         outDir: 'dist',
         assetsDir: 'assets',
         emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                manualChunks: function (id) {
+                    // Vendor libraries
+                    if (id.includes('node_modules')) {
+                        if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                            return 'vendor-react';
+                        }
+                        if (id.includes('swiper') || id.includes('lucide-react')) {
+                            return 'vendor-ui';
+                        }
+                        return 'vendor-other';
+                    }
+                    // Application chunks
+                    if (id.includes('src/components/Editor')) {
+                        return 'editor';
+                    }
+                    if (id.includes('src/components/Landing')) {
+                        return 'landing';
+                    }
+                    if (id.includes('src/components/ReactBits')) {
+                        return 'reactbits';
+                    }
+                },
+            },
+        },
     },
     preview: {
         port: 5173,

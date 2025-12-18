@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { prefersReducedMotion } from '../../utils/accessibility';
 
 interface Particle {
   x: number;
@@ -168,6 +169,15 @@ const FloatingParticles: React.FC<FloatingParticlesProps> = ({
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', handleMouseMove);
+
+    if (prefersReducedMotion()) {
+      // Draw particles once without animation
+      animate();
+      return () => {
+        window.removeEventListener('resize', resize);
+        window.removeEventListener('mousemove', handleMouseMove);
+      };
+    }
 
     animate();
 

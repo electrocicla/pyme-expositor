@@ -27,31 +27,36 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   disabled = false,
   className = '',
   error,
-}) => (
-  <div className={className}>
-    {label && (
-      <label className="block text-xs font-medium text-slate-300 mb-1.5">
-        {label}
-      </label>
-    )}
-    <input
-      type="number"
-      value={value || ''}
-      onChange={(e) => onChange(Number(e.target.value) || 0)}
-      min={min}
-      max={max}
-      step={step}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={`${inputBaseClasses} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500' : ''}`}
-    />
-    {description && (
-      <p className="text-xs text-slate-500 mt-1">{description}</p>
-    )}
-    {error && (
-      <p className="text-xs text-red-400 mt-1">{error}</p>
-    )}
-  </div>
-);
+}) => {
+  const inputId = label ? `number-input-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined;
+
+  return (
+    <div className={className}>
+      {label && (
+        <label htmlFor={inputId} className="block text-xs font-medium text-slate-300 mb-1.5">
+          {label}
+        </label>
+      )}
+      <input
+        id={inputId}
+        type="number"
+        value={value || ''}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        min={min}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`${inputBaseClasses} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500' : ''}`}
+      />
+      {description && (
+        <p className="text-xs text-slate-500 mt-1">{description}</p>
+      )}
+      {error && (
+        <p className="text-xs text-red-400 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
 
 export default NumberInput;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { prefersReducedMotion } from '../../utils/accessibility';
 
 type AnimationType = 
   | 'fade' 
@@ -110,7 +111,17 @@ const AnimateOnScroll: React.FC<AnimateOnScrollProps> = ({
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  const durationMs = durationMap[duration];
+  const easingFunction = getEasing(animation, easing);
+  const shouldAnimate = !prefersReducedMotion();
+
   useEffect(() => {
+    if (!shouldAnimate) {
+      setIsVisible(true);
+      setHasAnimated(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -135,16 +146,15 @@ const AnimateOnScroll: React.FC<AnimateOnScrollProps> = ({
         observer.unobserve(currentRef);
       }
     };
-  }, [threshold, once, hasAnimated]);
-
-  const durationMs = durationMap[duration];
-  const easingFunction = getEasing(animation, easing);
+  }, [threshold, once, hasAnimated, shouldAnimate]);
 
   const styles: React.CSSProperties = {
-    ...(isVisible ? getAnimatedStyles(animation) : getInitialStyles(animation)),
-    transition: `all ${durationMs}ms ${easingFunction}`,
-    transitionDelay: `${delay}ms`,
-    willChange: 'opacity, transform, filter',
+    ...(isVisible || !shouldAnimate ? getAnimatedStyles(animation) : getInitialStyles(animation)),
+    ...(shouldAnimate ? {
+      transition: `all ${durationMs}ms ${easingFunction}`,
+      transitionDelay: `${delay}ms`,
+      willChange: 'opacity, transform, filter',
+    } : {}),
   };
 
   return (

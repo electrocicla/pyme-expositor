@@ -31,11 +31,12 @@ export const Slider: React.FC<SliderProps> = ({
   className = '',
 }) => {
   const displayValue = formatValue ? formatValue(value) : value;
+  const inputId = label ? `slider-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined;
 
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-medium text-slate-300 mb-1.5">
+        <label htmlFor={inputId} className="block text-xs font-medium text-slate-300 mb-1.5">
           {label}
           {showValue && (
             <span className="float-right text-slate-400">{displayValue}</span>
@@ -43,6 +44,7 @@ export const Slider: React.FC<SliderProps> = ({
         </label>
       )}
       <input
+        id={inputId}
         type="range"
         min={min}
         max={max}

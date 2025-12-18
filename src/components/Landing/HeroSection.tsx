@@ -11,6 +11,7 @@ import React from 'react';
 import { useConfig } from '../../contexts/ConfigContext';
 import AnimateOnScroll from '../ReactBits/AnimateOnScroll';
 import HeroMediaSlider from '../ReactBits/HeroMediaSlider';
+import TypewriterText from '../ReactBits/TypewriterText';
 import type { DynamicStyles } from './useDynamicStyles';
 import type { AnimationsConfig } from './useEffectsConfig';
 
@@ -519,8 +520,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               duration={animations.duration}
               delay={0}
             >
-              <h2 
-                className={`${
+              {(() => {
+                const titleClasses = `${
                   hero.titleSize === 'sm' ? 'text-2xl sm:text-3xl' :
                   hero.titleSize === 'md' ? 'text-3xl sm:text-4xl' :
                   hero.titleSize === 'lg' ? 'text-4xl sm:text-5xl' :
@@ -535,15 +536,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                   'font-extrabold'
                 } ${letterSpacingClasses[hero.titleLetterSpacing || 'normal']} ${
                   lineHeightClasses[hero.titleLineHeight || 'tight']
-                } ${textTransformClasses[hero.titleTransform || 'none']}`}
-                style={{ 
+                } ${textTransformClasses[hero.titleTransform || 'none']}`;
+
+                const titleStyle = { 
                   color: (hero.textOverMedia && isBackgroundMediaTemplate) 
                     ? '#ffffff' 
                     : styles.textColor 
-                }}
-              >
-                {hero.title}
-              </h2>
+                };
+
+                return (
+                  <h2 className={titleClasses} style={titleStyle}>
+                    {hero.titleTypewriter ? (
+                      <TypewriterText
+                        text={hero.title}
+                        speed={hero.typewriterSpeed || 50}
+                        delay={hero.typewriterDelay || 500}
+                        loop={hero.typewriterLoop || false}
+                        cursor={hero.typewriterCursor !== false}
+                      />
+                    ) : (
+                      hero.title
+                    )}
+                  </h2>
+                );
+              })()}
             </AnimateOnScroll>
 
             {/* Subtitle */}
@@ -552,8 +568,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               duration={animations.duration}
               delay={animations.stagger ? 100 : 0}
             >
-              <p 
-                className={`${
+              {(() => {
+                const subtitleClasses = `${
                   hero.subtitleSize === 'sm' ? 'text-base sm:text-lg' :
                   hero.subtitleSize === 'md' ? 'text-lg sm:text-xl' :
                   hero.subtitleSize === 'lg' ? 'text-xl sm:text-2xl' :
@@ -565,16 +581,31 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                   'font-normal'
                 } ${
                   hero.template !== 'split' ? 'max-w-2xl mx-auto' : ''
-                }`}
-                style={{ 
+                }`;
+
+                const subtitleStyle = { 
                   color: (hero.textOverMedia && isBackgroundMediaTemplate) 
                     ? 'rgba(255,255,255,0.9)' 
                     : styles.textMuted,
                   opacity: Number(hero.subtitleOpacity || '70') / 100
-                }}
-              >
-                {hero.subtitle}
-              </p>
+                };
+
+                return (
+                  <p className={subtitleClasses} style={subtitleStyle}>
+                    {hero.subtitleTypewriter ? (
+                      <TypewriterText
+                        text={hero.subtitle}
+                        speed={hero.typewriterSpeed || 50}
+                        delay={(hero.typewriterDelay || 500) + (hero.titleTypewriter ? hero.title.length * (1000 / (hero.typewriterSpeed || 50)) : 0)}
+                        loop={hero.typewriterLoop || false}
+                        cursor={hero.typewriterCursor !== false}
+                      />
+                    ) : (
+                      hero.subtitle
+                    )}
+                  </p>
+                );
+              })()}
             </AnimateOnScroll>
 
             {/* CTA Buttons */}
