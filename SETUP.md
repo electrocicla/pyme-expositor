@@ -30,17 +30,17 @@ cd worker && pnpm install && cd ..
 ### 3. Configurar Variables de Entorno
 
 ```bash
-# En worker/wrangler.jsonc
-cp worker/wrangler.jsonc.example worker/wrangler.jsonc
+# En worker/
+cp worker/.env.example worker/.env
 ```
 
-Editar `worker/wrangler.jsonc`:
-```json
-{
-  "vars": {
-    "JWT_SECRET": "tu-secreto-seguro-aqui-cambiar-en-produccion"
-  }
-}
+Editar `worker/.env` con tus valores seguros:
+```bash
+# JWT Configuration
+JWT_SECRET=tu-secreto-super-seguro-aqui-cambiar-en-produccion
+
+# Environment
+ENVIRONMENT=development
 ```
 
 ### 4. Iniciar en Desarrollo

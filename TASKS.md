@@ -34,7 +34,7 @@ Provide a clear, procedural roadmap to audit, fix, and improve the `pyme-exposit
 - [ ] Add tests and CI
 - [ ] Documentation & migration notes
 - [ ] Final audit & performance testing
-- [ ] Confirm access & credential handling (do not store secrets in repo)
+- [x] Confirm access & credential handling (do not store secrets in repo)
 
 ---
 

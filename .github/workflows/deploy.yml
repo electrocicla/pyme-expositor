@@ -37,6 +37,9 @@ jobs:
       - name: Type check
         run: pnpm run build
       
+      - name: Run tests
+        run: pnpm test --run
+      
       - name: Worker tests
         working-directory: ./worker
         run: pnpm test || true
