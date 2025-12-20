@@ -18,12 +18,11 @@ export const HeroEffectsTab: React.FC = () => {
   const effectOptions = [
     { value: 'none', label: 'None' },
     { value: 'parallax', label: 'Parallax Scroll' },
-    { value: 'tilt', label: '3D Tilt' },
+    { value: 'tilt', label: '3D Tilt Hover' },
     { value: 'glass', label: 'Glassmorphism' },
-    { value: 'gradient', label: 'Animated Gradient' },
-    { value: 'fade', label: 'Fade In' },
-    { value: 'blur-in', label: 'Blur Reveal' },
-    { value: 'splash', label: 'Splash Cursor' },
+    { value: 'fade-in', label: 'Fade In Animation' },
+    { value: 'animate-on-scroll', label: 'Scroll Animation' },
+    { value: 'stagger', label: 'Stagger Animation' },
   ];
 
   return (
@@ -52,13 +51,31 @@ export const HeroEffectsTab: React.FC = () => {
 
         {hero.effect === 'tilt' && (
           <div className="p-4 bg-slate-800/50 rounded-lg border border-white/5 text-sm text-slate-400">
-            3D Tilt effect makes the hero card respond to mouse movement.
+            3D Tilt effect makes the hero card respond to mouse movement with smooth 3D transformations.
           </div>
         )}
 
         {hero.effect === 'glass' && (
           <div className="p-4 bg-slate-800/50 rounded-lg border border-white/5 text-sm text-slate-400">
-            Glassmorphism adds a frosted glass look to the content container.
+            Glassmorphism adds a frosted glass look with backdrop blur and transparency effects.
+          </div>
+        )}
+
+        {hero.effect === 'fade-in' && (
+          <div className="p-4 bg-slate-800/50 rounded-lg border border-white/5 text-sm text-slate-400">
+            Smooth fade-in animation when the hero section enters the viewport.
+          </div>
+        )}
+
+        {hero.effect === 'animate-on-scroll' && (
+          <div className="p-4 bg-slate-800/50 rounded-lg border border-white/5 text-sm text-slate-400">
+            Elements animate as they come into view while scrolling.
+          </div>
+        )}
+
+        {hero.effect === 'stagger' && (
+          <div className="p-4 bg-slate-800/50 rounded-lg border border-white/5 text-sm text-slate-400">
+            Child elements animate in sequence with a staggered delay effect.
           </div>
         )}
       </div>

@@ -28,6 +28,12 @@ export interface DynamicStyles {
   textColor: string;
   textMuted: string;
   hoverColor: string;
+  // Typography styles
+  titleFontSize: string;
+  titleFontFamily: string;
+  titleTextShadow: string;
+  subtitleColor: string;
+  bodyFontFamily: string;
 }
 
 interface ThemeConfig {
@@ -153,6 +159,13 @@ export function useDynamicStyles(config: SiteConfig): DynamicStyles {
       shadowPrimary: {
         boxShadow: `0 4px 14px 0 rgba(${primaryRgb}, 0.39)`,
       },
+      
+      // Typography styles
+      titleFontSize: '3rem',
+      titleFontFamily: `"${theme.headingFont || fontFamily}", serif`,
+      titleTextShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.1)',
+      subtitleColor: textMuted,
+      bodyFontFamily: `"${fontFamily}", system-ui, -apple-system, sans-serif`,
       
       primaryColor: primary,
       textColor,

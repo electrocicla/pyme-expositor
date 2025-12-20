@@ -8,6 +8,7 @@ interface PixelCardProps {
   colors?: string;
   noFocus?: boolean;
   className?: string;
+  style?: React.CSSProperties;
   children?: ReactNode;
 }
 
@@ -152,6 +153,7 @@ export default function PixelCard({
   colors,
   noFocus,
   className = '',
+  style,
   children
 }: PixelCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -260,6 +262,7 @@ export default function PixelCard({
     <div
       ref={containerRef}
       className={`pixel-card ${className}`}
+      style={style}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onFocus={finalNoFocus ? undefined : onFocus}

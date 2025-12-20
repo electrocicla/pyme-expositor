@@ -96,6 +96,11 @@ export function useEffectsConfig(config: SiteConfig): EffectsConfigResult {
         color: effects.particles?.color ?? '#6366f1',
       },
     };
+
+    // Override animations config with gallery-specific settings if they exist
+    if (config.gallery?.animateOnScroll !== undefined) {
+      result.animations.enabled = config.gallery.animateOnScroll;
+    }
     
     console.warn('useEffectsConfig: Returning config with cursor.enabled =', result.cursor.enabled);
     return result;

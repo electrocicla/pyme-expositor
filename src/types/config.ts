@@ -57,7 +57,7 @@ export interface HeroConfig {
   sliderShowArrows?: boolean;
   sliderPauseOnHover?: boolean;
   // Effect
-  effect: 'none' | 'parallax' | 'tilt' | 'glass' | 'gradient' | 'fade' | 'blur-in' | 'splash';
+  effect: 'none' | 'parallax' | 'tilt' | 'glass' | 'gradient' | 'fade' | 'blur-in' | 'splash' | 'fade-in' | 'animate-on-scroll' | 'stagger';
   // Text positioning
   textAlign: 'left' | 'center' | 'right';
   verticalAlign: 'top' | 'center' | 'bottom';
@@ -94,6 +94,7 @@ export interface HeroConfig {
   // Media positioning for split layout
   mediaPosition?: 'left' | 'right';
   mediaFit?: 'cover' | 'contain' | 'fill';
+  splitLayout?: '50-50' | '60-40' | '70-30' | '40-60' | '30-70';
   overlayOpacity?: number;
   showSecondaryButton?: boolean;
   secondaryButtonText?: string;

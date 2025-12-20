@@ -12,6 +12,7 @@ import TiltCard from '../ReactBits/TiltCard';
 import HoverCard from '../ReactBits/HoverCard';
 import GlowBorderCard from '../ReactBits/GlowBorderCard';
 import GradientBorderCard from '../ReactBits/GradientBorderCard';
+import PixelCard from '../ReactBits/PixelCard';
 import { hexToRgb, lightenColor } from '../../utils/colors';
 import type { DynamicStyles } from './useDynamicStyles';
 import type { AnimationsConfig, CardsConfig } from './useEffectsConfig';
@@ -150,16 +151,19 @@ const GallerySection: React.FC<GallerySectionProps> = ({
             </GradientBorderCard>
           );
         case 'pixel':
-        default:
           return withAnimation(
-            <HoverCard 
-              hover={cards.hover} 
-              glowColor={theme.primaryColor}
-              className="group overflow-hidden shadow-md border"
+            <PixelCard
+              className="group overflow-hidden shadow-md border w-full h-full"
+              variant="default"
+              gap={5}
+              speed={35}
+              colors="#f8fafc,#f1f5f9,#cbd5e1"
               style={styles.cardStyle}
             >
-              {renderCardContent(item)}
-            </HoverCard>
+              <HoverCard hover={cards.hover} glowColor={theme.primaryColor}>
+                {renderCardContent(item)}
+              </HoverCard>
+            </PixelCard>
           );
       }
     }

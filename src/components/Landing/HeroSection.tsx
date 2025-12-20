@@ -12,6 +12,11 @@ import { useConfig } from '../../contexts/ConfigContext';
 import AnimateOnScroll from '../ReactBits/AnimateOnScroll';
 import HeroMediaSlider from '../ReactBits/HeroMediaSlider';
 import TypewriterText from '../ReactBits/TypewriterText';
+import ParallaxSection from '../ReactBits/ParallaxSection';
+import TiltCard from '../ReactBits/TiltCard';
+import GlassCard from '../ReactBits/GlassCard';
+import FadeIn from '../ReactBits/FadeIn';
+import StaggerContainer from '../ReactBits/StaggerContainer';
 import type { DynamicStyles } from './useDynamicStyles';
 import type { AnimationsConfig } from './useEffectsConfig';
 
@@ -63,34 +68,6 @@ const mediaShadowClasses: Record<string, string> = {
   '2xl': 'shadow-2xl',
 };
 
-// Letter spacing classes
-const letterSpacingClasses: Record<string, string> = {
-  tighter: 'tracking-tighter',
-  tight: 'tracking-tight',
-  normal: 'tracking-normal',
-  wide: 'tracking-wide',
-  wider: 'tracking-wider',
-  widest: 'tracking-widest',
-};
-
-// Line height classes
-const lineHeightClasses: Record<string, string> = {
-  none: 'leading-none',
-  tight: 'leading-tight',
-  snug: 'leading-snug',
-  normal: 'leading-normal',
-  relaxed: 'leading-relaxed',
-  loose: 'leading-loose',
-};
-
-// Text transform classes
-const textTransformClasses: Record<string, string> = {
-  none: '',
-  uppercase: 'uppercase',
-  lowercase: 'lowercase',
-  capitalize: 'capitalize',
-};
-
 // Dual media split ratios
 const dualMediaSplitStyles: Record<string, { left: string; right: string }> = {
   '50-50': { left: 'w-1/2', right: 'w-1/2' },
@@ -108,63 +85,42 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   isDarkMode,
 }) => {
   const { config } = useConfig();
-  const { hero } = config;
+  const hero = config.hero;
 
-  // Compute height class based on template and config
-  const getHeightClass = () => {
-    const heroHeight = hero.heroHeight || 'auto';
-    
-    // Full-screen template always uses full viewport
-    if (hero.template === 'full-screen') {
-      return 'min-h-screen flex items-center';
-    }
-    
-    // For media-background and media-overlay, use height classes
-    if (hero.template === 'media-background' || hero.template === 'media-overlay') {
-      return `${heightClasses[heroHeight] || ''} flex items-center`;
-    }
-    
-    // For split and simple templates, combine height with padding
-    // If heroHeight is set (not auto), use min-height
-    if (heroHeight !== 'auto') {
-      return `${heightClasses[heroHeight]} flex items-center`;
-    }
-    
-    // Default: use padding-based height
-    const paddingClasses: Record<string, string> = {
-      sm: 'py-12 lg:py-16',
-      md: 'py-16 lg:py-24',
-      lg: 'py-20 lg:py-32',
-      xl: 'py-24 lg:py-40',
-      '2xl': 'py-32 lg:py-48',
-    };
-    return paddingClasses[hero.paddingY || '2xl'] || 'py-32 lg:py-48';
+  // Get height class
+  const getHeightClass = (): string => {
+    return heightClasses[hero.heroHeight || 'lg'];
   };
 
-  // Check if current template uses full background media
-  const isBackgroundMediaTemplate = hero.template === 'full-screen' || 
-                                     hero.template === 'media-background' || 
-                                     hero.template === 'media-overlay';
+  // Check if we have any media
+  const hasMedia = hero.mediaUrl || (hero.mediaItems && hero.mediaItems.length > 0);
 
-  // Get media items (prefer new mediaItems array, fallback to legacy single media)
-  const getMediaItems = () => {
-    if (hero.mediaItems && hero.mediaItems.length > 0) {
-      return hero.mediaItems;
-    }
+  // Build media items array
+  const mediaItems = React.useMemo(() => {
+    const items = [];
+
+    // Add primary media
     if (hero.mediaUrl) {
-      return [{
-        id: 'legacy-single',
+      items.push({
+        id: 'primary-media',
         url: hero.mediaUrl,
         type: hero.mediaType || 'image',
-      }];
+        alt: 'Hero media',
+      });
     }
-    return [];
-  };
 
-  const mediaItems = getMediaItems();
-  const hasMedia = mediaItems.length > 0;
+    // Add additional media items
+    if (hero.mediaItems) {
+      items.push(...hero.mediaItems);
+    }
 
-  // Render background media (for full-screen, media-background, media-overlay templates)
+    return items;
+  }, [hero.mediaUrl, hero.mediaType, hero.mediaItems]);
+
+  // Check if this is a background media template
+  const isBackgroundMediaTemplate = hero.template === 'media-background' || hero.template === 'media-overlay';
+
+  // Render background media
   const renderBackgroundMedia = () => {
     if (!isBackgroundMediaTemplate || !hasMedia) return null;
 
@@ -192,9 +148,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           />
         </div>
         {/* Overlay */}
-        <div 
-          className="absolute inset-0 z-[1]" 
-          style={{ 
+        <div
+          className="absolute inset-0 z-[1]"
+          style={{
             backgroundColor: hero.overlayColor || '#000000',
             opacity: hero.overlayOpacity ?? 0.5,
             ...(hero.overlayGradient && {
@@ -225,21 +181,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       const isLogoMedia = hero.dualMediaLayout === 'logo-media';
 
       return (
-        <AnimateOnScroll 
-          animation={animations.enabled ? 'zoom' : 'fade'} 
+        <AnimateOnScroll
+          animation={animations.enabled ? 'zoom' : 'fade'}
           duration={animations.duration}
           delay={animations.stagger ? 300 : 0}
           className="lg:w-1/2 flex-shrink-0"
         >
-          <div 
+          <div
             className={`flex ${isDualStacked ? 'flex-col' : 'flex-row'} gap-4 items-center ${
               mediaSizeClasses[mediaSize]
             }`}
           >
             {/* Secondary Media (Left/Top) */}
-            <div 
+            <div
               className={`relative overflow-hidden transition-transform duration-500 ${
-                isDualStacked ? 'w-full' : 
+                isDualStacked ? 'w-full' :
                 isFeaturedThumb ? 'w-1/4' :
                 isLogoMedia ? 'w-2/5' :
                 dualSplit.left
@@ -272,7 +228,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* Primary Media (Right/Bottom) */}
-            <div 
+            <div
               className={`relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-500 ${
                 isDualStacked ? 'w-full' :
                 isFeaturedThumb ? 'w-3/4' :
@@ -308,13 +264,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     // Single media layout (original behavior)
     if (hasMedia) {
       return (
-        <AnimateOnScroll 
-          animation={animations.enabled ? 'zoom' : 'fade'} 
+        <AnimateOnScroll
+          animation={animations.enabled ? 'zoom' : 'fade'}
           duration={animations.duration}
           delay={animations.stagger ? 300 : 0}
           className="lg:w-1/2 flex-shrink-0"
         >
-          <div 
+          <div
             className={`relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-500 ${
               mediaSizeClasses[mediaSize]
             }`}
@@ -345,11 +301,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
     // Placeholder when no media
     return (
-      <div 
+      <div
         className={`lg:w-1/2 flex-shrink-0 relative overflow-hidden border ${mediaRoundedClasses[mediaRounded]} ${mediaShadowClasses[mediaShadow]}`}
         style={styles.cardStyle}
       >
-        <div 
+        <div
           className="aspect-video flex items-center justify-center"
           style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
         >
@@ -357,18 +313,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
     );
-  };
-
-  // Text backdrop style for overlay templates
-  const getTextBackdropStyle = (): React.CSSProperties | undefined => {
-    if (!hero.textBackdrop || !isBackgroundMediaTemplate) return undefined;
-    
-    return {
-      backgroundColor: isDarkMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
-      backdropFilter: 'blur(8px)',
-      padding: '2rem',
-      borderRadius: styles.cardStyle.borderRadius,
-    };
   };
 
   // Render pure dual media template (no text, just two media items)
@@ -384,21 +328,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       <div className={`flex ${isDualStacked ? 'flex-col' : 'flex-row'} gap-6 items-center justify-center w-full max-w-6xl mx-auto`}>
         {/* Secondary Media (Left/Top) */}
         {hero.secondaryMediaUrl && (
-          <AnimateOnScroll 
-            animation={animations.enabled ? 'slide-right' : 'fade'} 
+          <AnimateOnScroll
+            animation={animations.enabled ? 'slide-right' : 'fade'}
             duration={animations.duration}
             delay={0}
-            className={isDualStacked ? 'w-full' : dualSplit.left}
+            className={`${isDualStacked ? 'w-full' : dualSplit.left}`}
           >
-            <div 
-              className={`relative overflow-hidden transition-transform duration-500 hover:scale-[1.02] ${
-                mediaRoundedClasses[secondaryRounded]
-              } ${mediaShadowClasses[mediaShadow]}`}
+            <div
+              className={`relative overflow-hidden ${mediaRoundedClasses[secondaryRounded]}`}
             >
               {hero.secondaryMediaType === 'video' ? (
                 <video
                   src={hero.secondaryMediaUrl}
-                  className={`w-full h-full ${
+                  className={`w-full h-auto ${
                     secondaryFit === 'cover' ? 'object-cover' :
                     secondaryFit === 'contain' ? 'object-contain' :
                     'object-fill'
@@ -424,16 +366,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         )}
 
         {/* Primary Media (Right/Bottom) */}
-        <AnimateOnScroll 
-          animation={animations.enabled ? 'slide-left' : 'fade'} 
+        <AnimateOnScroll
+          animation={animations.enabled ? 'slide-left' : 'fade'}
           duration={animations.duration}
-          delay={animations.stagger ? 150 : 0}
-          className={isDualStacked ? 'w-full' : (hero.secondaryMediaUrl ? dualSplit.right : 'w-full')}
+          delay={animations.stagger ? 200 : 0}
+          className={`${isDualStacked ? 'w-full' : dualSplit.right}`}
         >
-          <div 
-            className={`relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-500 ${
-              mediaRoundedClasses[mediaRounded]
-            } ${mediaShadowClasses[mediaShadow]}`}
+          <div
+            className={`relative overflow-hidden ${mediaRoundedClasses[mediaRounded]} ${mediaShadowClasses[mediaShadow]}`}
           >
             <HeroMediaSlider
               items={mediaItems}
@@ -463,19 +403,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   // Check if this is a dual-media only template
   const isDualMediaTemplate = hero.template === 'dual-media';
 
-  return (
-    <section 
-      className={`relative overflow-hidden ${getHeightClass()}`}
-      style={
-        bgEffectsEnabled 
-          ? { backgroundColor: 'transparent' }  // Transparent when effects enabled
-          : (bgType === 'gradient' ? styles.animatedGradientBg : styles.gradientBg)
-      }
-    >
-      {/* Background Media */}
-      {renderBackgroundMedia()}
-
-      {/* Content */}
+  // Render content with hero effects applied
+  const renderContentWithEffects = () => {
+    const content = (
       <div className={`max-w-7xl mx-auto w-full relative z-10 ${
         hero.paddingX === 'sm' ? 'px-2 sm:px-4' :
         hero.paddingX === 'md' ? 'px-4 sm:px-6 lg:px-8' :
@@ -487,7 +417,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           renderDualMediaTemplate()
         ) : (
           <div className={`${
-            hero.template === 'split' 
+            hero.template === 'split'
               ? `flex flex-col lg:flex-row gap-12 ${hero.mediaPosition === 'left' ? 'lg:flex-row-reverse' : ''}`
               : 'grid gap-12'
           } ${
@@ -496,121 +426,80 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             'items-center'
           }`}>
           {/* Text Content */}
-          <div 
+          <div
             className={`space-y-8 ${
-              hero.template === 'split' ? 'lg:w-1/2' : ''
-            } ${
-              hero.template !== 'split' ? (
-                hero.contentMaxWidth === 'sm' ? 'max-w-md mx-auto' :
-                hero.contentMaxWidth === 'md' ? 'max-w-xl mx-auto' :
-                hero.contentMaxWidth === 'lg' ? 'max-w-2xl mx-auto' :
-                hero.contentMaxWidth === 'xl' ? 'max-w-4xl mx-auto' :
-                'w-full'
-              ) : ''
-            } ${
-              hero.textAlign === 'left' ? 'text-left' :
-              hero.textAlign === 'right' ? 'text-right' :
-              'text-center'
+              hero.template === 'split'
+                ? (hero.mediaPosition === 'left' ? 'lg:order-2' : 'lg:order-1') + ' ' + 'lg:w-1/2'
+                : 'text-center'
             }`}
-            style={getTextBackdropStyle()}
           >
             {/* Title */}
-            <AnimateOnScroll 
-              animation={animations.enabled ? animations.type : 'fade'} 
-              duration={animations.duration}
-              delay={0}
-            >
-              {(() => {
-                const titleClasses = `${
-                  hero.titleSize === 'sm' ? 'text-2xl sm:text-3xl' :
-                  hero.titleSize === 'md' ? 'text-3xl sm:text-4xl' :
-                  hero.titleSize === 'lg' ? 'text-4xl sm:text-5xl' :
-                  hero.titleSize === 'xl' ? 'text-4xl sm:text-5xl lg:text-6xl' :
-                  hero.titleSize === '3xl' ? 'text-6xl sm:text-7xl lg:text-8xl' :
-                  'text-5xl sm:text-6xl lg:text-7xl'
-                } ${
-                  hero.titleWeight === 'normal' ? 'font-normal' :
-                  hero.titleWeight === 'medium' ? 'font-medium' :
-                  hero.titleWeight === 'semibold' ? 'font-semibold' :
-                  hero.titleWeight === 'bold' ? 'font-bold' :
-                  'font-extrabold'
-                } ${letterSpacingClasses[hero.titleLetterSpacing || 'normal']} ${
-                  lineHeightClasses[hero.titleLineHeight || 'tight']
-                } ${textTransformClasses[hero.titleTransform || 'none']}`;
+            {(() => {
+              const titleContent = hero.titleTypewriter ? (
+                <TypewriterText
+                  text={hero.title}
+                  speed={hero.typewriterSpeed || 50}
+                  delay={hero.typewriterDelay || 1000}
+                  loop={hero.typewriterLoop || false}
+                  cursor={hero.typewriterCursor !== false}
+                />
+              ) : (
+                hero.title
+              );
 
-                const titleStyle = { 
-                  color: (hero.textOverMedia && isBackgroundMediaTemplate) 
-                    ? '#ffffff' 
-                    : styles.textColor 
-                };
-
-                return (
-                  <h2 className={titleClasses} style={titleStyle}>
-                    {hero.titleTypewriter ? (
-                      <TypewriterText
-                        text={hero.title}
-                        speed={hero.typewriterSpeed || 50}
-                        delay={hero.typewriterDelay || 500}
-                        loop={hero.typewriterLoop || false}
-                        cursor={hero.typewriterCursor !== false}
-                      />
-                    ) : (
-                      hero.title
-                    )}
-                  </h2>
-                );
-              })()}
-            </AnimateOnScroll>
+              return (
+                <AnimateOnScroll
+                  animation={animations.enabled ? animations.type : 'fade'}
+                  duration={animations.duration}
+                  delay={0}
+                >
+                  <h1
+                    className={`font-bold leading-tight ${
+                      hero.template === 'split' ? 'text-left' : 'text-center'
+                    }`}
+                    style={{
+                      color: styles.titleColor.color,
+                    }}
+                  >
+                    {titleContent}
+                  </h1>
+                </AnimateOnScroll>
+              );
+            })()}
 
             {/* Subtitle */}
-            <AnimateOnScroll 
-              animation={animations.enabled ? animations.type : 'fade'} 
-              duration={animations.duration}
-              delay={animations.stagger ? 100 : 0}
-            >
-              {(() => {
-                const subtitleClasses = `${
-                  hero.subtitleSize === 'sm' ? 'text-base sm:text-lg' :
-                  hero.subtitleSize === 'md' ? 'text-lg sm:text-xl' :
-                  hero.subtitleSize === 'lg' ? 'text-xl sm:text-2xl' :
-                  'text-2xl sm:text-3xl'
-                } ${
-                  hero.subtitleWeight === 'light' ? 'font-light' :
-                  hero.subtitleWeight === 'medium' ? 'font-medium' :
-                  hero.subtitleWeight === 'semibold' ? 'font-semibold' :
-                  'font-normal'
-                } ${
-                  hero.template !== 'split' ? 'max-w-2xl mx-auto' : ''
-                }`;
-
-                const subtitleStyle = { 
-                  color: (hero.textOverMedia && isBackgroundMediaTemplate) 
-                    ? 'rgba(255,255,255,0.9)' 
-                    : styles.textMuted,
-                  opacity: Number(hero.subtitleOpacity || '70') / 100
-                };
-
-                return (
-                  <p className={subtitleClasses} style={subtitleStyle}>
-                    {hero.subtitleTypewriter ? (
-                      <TypewriterText
-                        text={hero.subtitle}
-                        speed={hero.typewriterSpeed || 50}
-                        delay={(hero.typewriterDelay || 500) + (hero.titleTypewriter ? hero.title.length * (1000 / (hero.typewriterSpeed || 50)) : 0)}
-                        loop={hero.typewriterLoop || false}
-                        cursor={hero.typewriterCursor !== false}
-                      />
-                    ) : (
-                      hero.subtitle
-                    )}
-                  </p>
-                );
-              })()}
-            </AnimateOnScroll>
+            {hero.subtitle && (
+              <AnimateOnScroll
+                animation={animations.enabled ? animations.type : 'fade'}
+                duration={animations.duration}
+                delay={animations.stagger ? 100 : 0}
+              >
+                <p
+                  className={`text-xl leading-relaxed ${
+                    hero.template === 'split' ? 'text-left' : 'text-center'
+                  }`}
+                  style={{
+                    color: styles.textMuted,
+                  }}
+                >
+                  {hero.subtitleTypewriter ? (
+                    <TypewriterText
+                      text={hero.subtitle}
+                      speed={hero.typewriterSpeed || 50}
+                      delay={hero.typewriterDelay || 2000}
+                      loop={hero.typewriterLoop || false}
+                      cursor={hero.typewriterCursor !== false}
+                    />
+                  ) : (
+                    hero.subtitle
+                  )}
+                </p>
+              </AnimateOnScroll>
+            )}
 
             {/* CTA Buttons */}
-            <AnimateOnScroll 
-              animation={animations.enabled ? animations.type : 'fade'} 
+            <AnimateOnScroll
+              animation={animations.enabled ? animations.type : 'fade'}
               duration={animations.duration}
               delay={animations.stagger ? 200 : 0}
             >
@@ -641,12 +530,84 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </AnimateOnScroll>
           </div>
-          
+
           {/* Split Template Media */}
           {renderSplitMedia()}
         </div>
         )}
       </div>
+    );
+
+    // Apply hero effects
+    switch (hero.effect) {
+      case 'parallax':
+        return (
+          <ParallaxSection speed={0.5} className="w-full">
+            {content}
+          </ParallaxSection>
+        );
+
+      case 'tilt':
+        return (
+          <TiltCard className="w-full">
+            {content}
+          </TiltCard>
+        );
+
+      case 'glass':
+        return (
+          <GlassCard className="w-full">
+            {content}
+          </GlassCard>
+        );
+
+      case 'fade-in':
+        return (
+          <FadeIn className="w-full">
+            {content}
+          </FadeIn>
+        );
+
+      case 'animate-on-scroll':
+        return (
+          <AnimateOnScroll
+            animation="fade"
+            duration="normal"
+            className="w-full"
+          >
+            {content}
+          </AnimateOnScroll>
+        );
+
+      case 'stagger':
+        return (
+          <StaggerContainer
+            staggerDelay={100}
+            className="w-full"
+          >
+            {content}
+          </StaggerContainer>
+        );
+
+      default:
+        return content;
+    }
+  };
+
+  return (
+    <section
+      className={`relative overflow-hidden ${getHeightClass()}`}
+      style={
+        bgEffectsEnabled
+          ? { backgroundColor: 'transparent' }  // Transparent when effects enabled
+          : (bgType === 'gradient' ? styles.animatedGradientBg : styles.gradientBg)
+      }
+    >
+      {/* Background Media */}
+      {renderBackgroundMedia()}
+
+      {/* Content with Effects */}
+      {renderContentWithEffects()}
     </section>
   );
 };
