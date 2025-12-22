@@ -27,10 +27,16 @@ export const EffectsPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
   const { device } = useEditor();
 
-  // Initialize effects config if not present
-  const effects = device === 'desktop'
+  // Initialize effects config if not present, merging device-specific overrides with defaults
+  const effects: EffectsConfig = device === 'desktop'
     ? (config.effects || defaultEffects)
-    : { ...(config.effects || defaultEffects), ...(config.effects?.[device] || {}) };
+    : {
+        cursor: { ...defaultEffects.cursor, ...(config.effects?.cursor || {}), ...(config.effects?.[device]?.cursor || {}) },
+        background: { ...defaultEffects.background, ...(config.effects?.background || {}), ...(config.effects?.[device]?.background || {}) },
+        cards: { ...defaultEffects.cards, ...(config.effects?.cards || {}), ...(config.effects?.[device]?.cards || {}) },
+        animations: { ...defaultEffects.animations, ...(config.effects?.animations || {}), ...(config.effects?.[device]?.animations || {}) },
+        particles: { ...defaultEffects.particles, ...(config.effects?.particles || {}), ...(config.effects?.[device]?.particles || {}) },
+      };
 
   // Generic update handler for any effect section
   const updateEffects = useCallback(<K extends keyof EffectsConfig>(
@@ -41,24 +47,23 @@ export const EffectsPanel: React.FC = () => {
       setConfig({
         ...config,
         effects: {
-          ...config.effects,
+          ...effects,
           [key]: value,
         },
       });
     } else {
-      const deviceConfig = config.effects?.[device] || {};
       setConfig({
         ...config,
         effects: {
-          ...config.effects,
+          ...effects,
           [device]: {
-            ...deviceConfig,
+            ...(config.effects?.[device] || {}),
             [key]: value,
           },
         },
       });
     }
-  }, [config, setConfig, device]);
+  }, [config, effects, setConfig, device]);
 
   // Apply a complete preset
   const applyPreset = useCallback((preset: EffectsConfig) => {
@@ -71,12 +76,12 @@ export const EffectsPanel: React.FC = () => {
       setConfig({
         ...config,
         effects: {
-          ...config.effects,
+          ...effects,
           [device]: preset,
         },
       });
     }
-  }, [config, setConfig, device]);
+  }, [config, effects, setConfig, device]);
 
   return (
     <div className="flex flex-col h-full">

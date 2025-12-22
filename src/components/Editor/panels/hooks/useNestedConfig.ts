@@ -18,7 +18,7 @@ export function useNestedConfig<
 ) {
   const { config, setConfig } = useConfig();
   
-  const sectionConfig = config[sectionKey] as Record<string, unknown>;
+  const sectionConfig = config[sectionKey] as unknown as Record<string, unknown>;
   const nestedConfig = useMemo(() => (sectionConfig?.[nestedKey as string] || {}) as Record<string, unknown>, [sectionConfig, nestedKey]);
   
   const updateNested = useCallback(<T extends string>(

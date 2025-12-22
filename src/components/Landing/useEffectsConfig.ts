@@ -64,12 +64,11 @@ export function useEffectsConfig(config: SiteConfig, device: 'desktop' | 'tablet
         // Deep merge for effects categories
         const overrides = effects[device];
         effects = {
-            ...effects,
-            cursor: { ...effects.cursor, ...overrides?.cursor },
-            background: { ...effects.background, ...overrides?.background },
-            cards: { ...effects.cards, ...overrides?.cards },
-            animations: { ...effects.animations, ...overrides?.animations },
-            particles: { ...effects.particles, ...overrides?.particles },
+            cursor: { ...effects.cursor, ...overrides?.cursor } as EffectsConfig['cursor'],
+            background: { ...effects.background, ...overrides?.background } as EffectsConfig['background'],
+            cards: { ...effects.cards, ...overrides?.cards } as EffectsConfig['cards'],
+            animations: { ...effects.animations, ...overrides?.animations } as EffectsConfig['animations'],
+            particles: { ...effects.particles, ...overrides?.particles } as EffectsConfig['particles'],
         };
     }
     
@@ -83,30 +82,30 @@ export function useEffectsConfig(config: SiteConfig, device: 'desktop' | 'tablet
     
     const result = {
       cursor: {
-        enabled: effects.cursor?.enabled ?? false,
-        type: effects.cursor?.type ?? 'splash',
-        color: effects.cursor?.color ?? '#6366f1',
+        enabled: effects.cursor?.enabled ?? DEFAULT_EFFECTS.cursor.enabled,
+        type: effects.cursor?.type ?? DEFAULT_EFFECTS.cursor.type,
+        color: effects.cursor?.color ?? DEFAULT_EFFECTS.cursor.color,
       },
       background: {
-        enabled: effects.background?.enabled ?? false,
-        type: effects.background?.type ?? 'gradient',
-        speed: effects.background?.speed ?? 'normal',
+        enabled: effects.background?.enabled ?? DEFAULT_EFFECTS.background.enabled,
+        type: effects.background?.type ?? DEFAULT_EFFECTS.background.type,
+        speed: effects.background?.speed ?? DEFAULT_EFFECTS.background.speed,
       },
       cards: {
-        enabled: effects.cards?.enabled ?? false,
-        type: effects.cards?.type ?? 'glass',
-        hover: effects.cards?.hover ?? 'lift',
+        enabled: effects.cards?.enabled ?? DEFAULT_EFFECTS.cards.enabled,
+        type: effects.cards?.type ?? DEFAULT_EFFECTS.cards.type,
+        hover: effects.cards?.hover ?? DEFAULT_EFFECTS.cards.hover,
       },
       animations: {
-        enabled: effects.animations?.enabled ?? true,
-        type: effects.animations?.type ?? 'fade',
-        duration: effects.animations?.duration ?? 'normal',
-        stagger: effects.animations?.stagger ?? true,
+        enabled: effects.animations?.enabled ?? DEFAULT_EFFECTS.animations.enabled,
+        type: effects.animations?.type ?? DEFAULT_EFFECTS.animations.type,
+        duration: effects.animations?.duration ?? DEFAULT_EFFECTS.animations.duration,
+        stagger: effects.animations?.stagger ?? DEFAULT_EFFECTS.animations.stagger,
       },
       particles: {
-        enabled: effects.particles?.enabled ?? false,
-        count: effects.particles?.count ?? 50,
-        color: effects.particles?.color ?? '#6366f1',
+        enabled: effects.particles?.enabled ?? DEFAULT_EFFECTS.particles.enabled,
+        count: effects.particles?.count ?? DEFAULT_EFFECTS.particles.count,
+        color: effects.particles?.color ?? DEFAULT_EFFECTS.particles.color,
       },
     };
 

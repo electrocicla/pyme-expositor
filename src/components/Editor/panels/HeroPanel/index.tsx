@@ -16,7 +16,6 @@ import { HeroContentTab } from './HeroContentTab';
 import { HeroLayoutTab } from './HeroLayoutTab';
 import { HeroMediaTab } from './HeroMediaTab';
 import { HeroTypographyTab } from './HeroTypographyTab';
-import { HeroMobileTab } from './HeroMobileTab';
 import { HeroEffectsTab } from './HeroEffectsTab';
 
 /**

@@ -37,14 +37,8 @@ const GallerySection: React.FC<GallerySectionProps> = ({
   loading,
   isDarkMode,
   transparentBg = false,
-  device = 'desktop',
 }) => {
   const { config } = useConfig();
-  
-  const gallery = React.useMemo(() => {
-    if (device === 'desktop') return config.gallery;
-    return { ...config.gallery, ...config.gallery[device] };
-  }, [config.gallery, device]);
 
   const theme = config.theme;
 
