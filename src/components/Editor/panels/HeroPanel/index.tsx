@@ -9,6 +9,7 @@
 import React, { useState, useCallback } from 'react';
 import type { HeroConfig, SectionsConfig } from '../../../../types/config';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, TabNavigation, SectionStatusControl } from '../shared';
 import { heroTabs, type HeroTabType } from './constants';
 import { HeroContentTab } from './HeroContentTab';
@@ -24,6 +25,7 @@ import { HeroEffectsTab } from './HeroEffectsTab';
  */
 export const HeroPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<HeroTabType>('content');
 
   const sections = config.sections;
@@ -67,19 +69,38 @@ export const HeroPanel: React.FC = () => {
     key: K,
     value: HeroConfig[K]
   ) => {
-    setConfig({
-      ...config,
-      hero: {
-        ...config.hero,
-        [key]: value,
-      },
-    });
-  }, [config, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        hero: {
+          ...config.hero,
+          [key]: value,
+        },
+      });
+    } else {
+      // Handle mobile/tablet override
+      const deviceConfig = config.hero[device] || {};
+      setConfig({
+        ...config,
+        hero: {
+          ...config.hero,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Render the active tab content
   const renderTabContent = () => {
+    const effectiveConfig = device === 'desktop' 
+      ? config.hero 
+      : { ...config.hero, ...config.hero[device] };
+
     const props = {
-      config: config.hero,
+      config: effectiveConfig,
       onUpdate: handleUpdate,
     };
 
@@ -95,21 +116,23 @@ export const HeroPanel: React.FC = () => {
       case 'effects':
         return <HeroEffectsTab />;
       case 'responsive':
-        return <HeroMobileTab {...props} />;
+        return null; // Hidden in new structure
       default:
         return null;
     }
   };
 
+  const visibleTabs = heroTabs.filter(tab => tab.id !== 'responsive');
+
   return (
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Hero Section"
-        subtitle="Configure your landing page hero"
+        subtitle={`Configure your landing page hero (${device})`}
       />
       
       <TabNavigation
-        tabs={heroTabs}
+        tabs={visibleTabs}
         activeTab={activeTab}
         onChange={setActiveTab}
       />

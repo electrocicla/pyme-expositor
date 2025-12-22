@@ -9,6 +9,7 @@
 import React, { useCallback } from 'react';
 import type { EffectsConfig } from '../../../../types/config';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader } from '../shared';
 import { defaultEffects } from './constants';
 import { CursorEffectsSection } from './CursorEffectsSection';
@@ -24,37 +25,64 @@ import { EffectPresetsSection } from './EffectPresetsSection';
  */
 export const EffectsPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
 
   // Initialize effects config if not present
-  const effects = config.effects || defaultEffects;
+  const effects = device === 'desktop'
+    ? (config.effects || defaultEffects)
+    : { ...(config.effects || defaultEffects), ...(config.effects?.[device] || {}) };
 
   // Generic update handler for any effect section
   const updateEffects = useCallback(<K extends keyof EffectsConfig>(
     key: K,
     value: EffectsConfig[K]
   ) => {
-    setConfig({
-      ...config,
-      effects: {
-        ...effects,
-        [key]: value,
-      },
-    });
-  }, [config, effects, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        effects: {
+          ...config.effects,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.effects?.[device] || {};
+      setConfig({
+        ...config,
+        effects: {
+          ...config.effects,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Apply a complete preset
   const applyPreset = useCallback((preset: EffectsConfig) => {
-    setConfig({
-      ...config,
-      effects: preset,
-    });
-  }, [config, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        effects: preset,
+      });
+    } else {
+      setConfig({
+        ...config,
+        effects: {
+          ...config.effects,
+          [device]: preset,
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   return (
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Visual Effects"
-        subtitle="Cursor, background, and animation effects"
+        subtitle={`Cursor, background, and animation effects (${device})`}
       />
       
       <div className="flex-1 overflow-y-auto p-4 space-y-6">

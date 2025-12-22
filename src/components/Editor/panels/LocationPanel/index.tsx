@@ -6,6 +6,7 @@
 import React, { useState, useCallback } from 'react';
 import { MapPin, Layout, Palette } from 'lucide-react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select, InfoBox, SectionStatusControl } from '../shared';
 import type { TabConfig, SelectOption } from '../shared/types';
 import type { LocationConfig, SectionsConfig } from '../../../../types/config';
@@ -89,9 +90,13 @@ const extractEmbedUrl = (shareUrl: string): string => {
 
 export const LocationPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<LocationTabType>('content');
 
-  const location = config.location;
+  const location = device === 'desktop' 
+    ? config.location 
+    : { ...config.location, ...config.location[device] };
+
   const sections = config.sections;
 
   // Section visibility helpers
@@ -133,27 +138,61 @@ export const LocationPanel: React.FC = () => {
   }, [config, sections, setConfig]);
 
   const handleUpdate = useCallback((key: keyof LocationConfig, value: unknown) => {
-    setConfig({
-      ...config,
-      location: {
-        ...location,
-        [key]: value,
-      },
-    });
-  }, [config, location, setConfig]);
-
-  const handleContactUpdate = useCallback((key: string, value: string) => {
-    setConfig({
-      ...config,
-      location: {
-        ...location,
-        contactInfo: {
-          ...location.contactInfo,
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        location: {
+          ...config.location,
           [key]: value,
         },
-      },
-    });
-  }, [config, location, setConfig]);
+      });
+    } else {
+      const deviceConfig = config.location[device] || {};
+      setConfig({
+        ...config,
+        location: {
+          ...config.location,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
+
+  const handleContactUpdate = useCallback((key: string, value: string) => {
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        location: {
+          ...config.location,
+          contactInfo: {
+            ...config.location.contactInfo,
+            [key]: value,
+          },
+        },
+      });
+    } else {
+      const deviceConfig = config.location[device] || {};
+      // Initialize with desktop contact info if not present in override
+      const currentContactInfo = (deviceConfig.contactInfo as Record<string, string>) || { ...config.location.contactInfo };
+      
+      setConfig({
+        ...config,
+        location: {
+          ...config.location,
+          [device]: {
+            ...deviceConfig,
+            contactInfo: {
+              ...currentContactInfo,
+              [key]: value,
+            },
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   const handleGoogleMapsUrlChange = useCallback((url: string) => {
     // If user pasted iframe code, extract the src

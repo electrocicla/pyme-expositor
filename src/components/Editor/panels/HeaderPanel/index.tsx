@@ -5,6 +5,7 @@
 
 import React, { useCallback } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { headerTabs } from './constants';
 import { PanelHeader, TabNavigation, SectionStatusControl } from '../shared';
 import { useTabNavigation } from '../hooks';
@@ -17,6 +18,7 @@ import type { SectionsConfig } from '../../../../types/config';
 
 export const HeaderPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const { activeTab, setActiveTab } = useTabNavigation(headerTabs[0].id);
 
   const sections = config.sections;
@@ -56,29 +58,47 @@ export const HeaderPanel: React.FC = () => {
   }, [config, sections, setConfig]);
 
   const handleHeaderUpdate = (key: string, value: unknown) => {
-    setConfig({
-      ...config,
-      header: {
-        ...config.header,
-        [key]: value,
-      },
-    });
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        header: {
+          ...config.header,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.header[device] || {};
+      setConfig({
+        ...config,
+        header: {
+          ...config.header,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
   };
 
   const renderActiveTab = () => {
+    const effectiveHeader = device === 'desktop'
+      ? config.header
+      : { ...config.header, ...config.header[device] };
+
     switch (activeTab) {
       case 'content':
-        return <HeaderContentTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       case 'layout':
-        return <HeaderLayoutTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderLayoutTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       case 'behavior':
-        return <HeaderBehaviorTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderBehaviorTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       case 'links':
-        return <HeaderLinksTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderLinksTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       case 'linkstyle':
-        return <HeaderLinkStyleTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderLinkStyleTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       default:
-        return <HeaderContentTab header={config.header} onUpdate={handleHeaderUpdate} />;
+        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
     }
   };
 
@@ -86,7 +106,7 @@ export const HeaderPanel: React.FC = () => {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Header Settings"
-        subtitle="Configure your site's navigation header"
+        subtitle={`Configure your site's navigation header (${device})`}
       />
 
       <TabNavigation

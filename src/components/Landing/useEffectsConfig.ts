@@ -56,9 +56,22 @@ const DEFAULT_EFFECTS: EffectsConfigResult = {
   particles: { enabled: false, count: 50, color: '#6366f1' },
 };
 
-export function useEffectsConfig(config: SiteConfig): EffectsConfigResult {
+export function useEffectsConfig(config: SiteConfig, device: 'desktop' | 'tablet' | 'mobile' = 'desktop'): EffectsConfigResult {
   return useMemo(() => {
-    const effects = config.effects;
+    let effects = config.effects;
+    
+    if (device !== 'desktop' && effects && effects[device]) {
+        // Deep merge for effects categories
+        const overrides = effects[device];
+        effects = {
+            ...effects,
+            cursor: { ...effects.cursor, ...overrides?.cursor },
+            background: { ...effects.background, ...overrides?.background },
+            cards: { ...effects.cards, ...overrides?.cards },
+            animations: { ...effects.animations, ...overrides?.animations },
+            particles: { ...effects.particles, ...overrides?.particles },
+        };
+    }
     
     console.warn('useEffectsConfig: config.effects =', effects);
     console.warn('useEffectsConfig: cursor enabled =', effects?.cursor?.enabled);

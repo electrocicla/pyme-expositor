@@ -5,6 +5,7 @@
 
 import React, { useCallback } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { footerTabs } from './constants';
 import { PanelHeader, TabNavigation, SectionStatusControl } from '../shared';
 import { useTabNavigation } from '../hooks';
@@ -16,9 +17,13 @@ import type { SectionsConfig } from '../../../../types/config';
 
 export const FooterPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const { activeTab, setActiveTab } = useTabNavigation(footerTabs[0].id);
 
-  const footer = config.footer || {};
+  const footer = device === 'desktop' 
+    ? config.footer || {}
+    : { ...config.footer, ...config.footer[device] };
+
   const sections = config.sections;
 
   // Section visibility helpers
@@ -56,13 +61,27 @@ export const FooterPanel: React.FC = () => {
   }, [config, sections, setConfig]);
 
   const handleFooterUpdate = (key: string, value: unknown) => {
-    setConfig({
-      ...config,
-      footer: {
-        ...config.footer,
-        [key]: value,
-      },
-    });
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        footer: {
+          ...config.footer,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.footer[device] || {};
+      setConfig({
+        ...config,
+        footer: {
+          ...config.footer,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
   };
 
   const renderActiveTab = () => {
@@ -84,7 +103,7 @@ export const FooterPanel: React.FC = () => {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Footer Settings"
-        subtitle="Configure your site's footer section"
+        subtitle={`Configure your site's footer section (${device})`}
       />
 
       <TabNavigation

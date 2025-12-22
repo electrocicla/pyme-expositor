@@ -8,6 +8,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, TabNavigation, SectionStatusControl } from '../shared';
 import { galleryTabs, type GalleryTabType } from './constants';
 import { GalleryContentTab } from './GalleryContentTab';
@@ -22,9 +23,13 @@ import type { SectionsConfig } from '../../../../types/config';
  */
 export const GalleryPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<GalleryTabType>('content');
 
-  const gallery = config.gallery;
+  const gallery = device === 'desktop' 
+    ? config.gallery 
+    : { ...config.gallery, ...config.gallery[device] };
+
   const sections = config.sections;
 
   // Section visibility helpers
@@ -63,14 +68,28 @@ export const GalleryPanel: React.FC = () => {
 
   // Generic update handler
   const handleUpdate = useCallback((key: string, value: unknown) => {
-    setConfig({
-      ...config,
-      gallery: {
-        ...gallery,
-        [key]: value,
-      },
-    });
-  }, [config, gallery, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        gallery: {
+          ...config.gallery,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.gallery[device] || {};
+      setConfig({
+        ...config,
+        gallery: {
+          ...config.gallery,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Render the active tab content
   const renderTabContent = () => {
@@ -97,7 +116,7 @@ export const GalleryPanel: React.FC = () => {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Gallery Settings"
-        subtitle="Configure your media gallery"
+        subtitle={`Configure your media gallery (${device})`}
       />
       
       <TabNavigation

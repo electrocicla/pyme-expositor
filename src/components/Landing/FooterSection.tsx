@@ -18,6 +18,7 @@ import type { DynamicStyles } from './useDynamicStyles';
 interface FooterSectionProps {
   styles: DynamicStyles;
   transparentBg?: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 // Custom icons for platforms not in lucide-react
@@ -52,9 +53,19 @@ const socialConfig = {
   whatsapp: { icon: WhatsAppIcon, color: '#25D366', label: 'WhatsApp' },
 } as const;
 
-const FooterSection: React.FC<FooterSectionProps> = ({ styles, transparentBg = false }) => {
+const FooterSection: React.FC<FooterSectionProps> = ({ 
+  styles, 
+  transparentBg = false,
+  device = 'desktop',
+}) => {
   const { config } = useConfig();
-  const { footer, header, theme } = config;
+  
+  const footer = React.useMemo(() => {
+    if (device === 'desktop') return config.footer;
+    return { ...config.footer, ...config.footer[device] };
+  }, [config.footer, device]);
+
+  const { header, theme } = config;
 
   // Get active social links
   const activeSocials = Object.entries(footer.socials).filter(([, url]) => url);

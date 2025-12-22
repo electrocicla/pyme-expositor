@@ -54,8 +54,14 @@ const DEFAULT_THEME: ThemeConfig = {
   mode: 'dark',
 };
 
-export function useDynamicStyles(config: SiteConfig): DynamicStyles {
-  const theme = config?.theme ?? DEFAULT_THEME;
+export function useDynamicStyles(config: SiteConfig, device: 'desktop' | 'tablet' | 'mobile' = 'desktop'): DynamicStyles {
+  const baseTheme = config?.theme ?? DEFAULT_THEME;
+  
+  const theme = useMemo(() => {
+    if (device === 'desktop') return baseTheme;
+    return { ...baseTheme, ...baseTheme[device] };
+  }, [baseTheme, device]);
+
   const isDarkMode = theme.mode === 'dark';
 
   return useMemo(() => {

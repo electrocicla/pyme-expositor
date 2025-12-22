@@ -6,6 +6,7 @@
 import React, { useState, useCallback } from 'react';
 import { FileText, Layout, Sparkles } from 'lucide-react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, TabNavigation, Section, SectionHeader, Input, Textarea, Toggle, ButtonGroup, Select, SectionStatusControl } from '../shared';
 import type { TabConfig, SelectOption } from '../shared/types';
 import type { FeaturesConfig, SectionsConfig } from '../../../../types/config';
@@ -90,9 +91,13 @@ const FeatureItemEditor: React.FC<FeatureItemEditorProps> = ({ item, onChange, o
 
 export const FeaturesPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<FeaturesTabType>('content');
 
-  const features = config.features;
+  const features = device === 'desktop' 
+    ? config.features 
+    : { ...config.features, ...config.features[device] };
+
   const sections = config.sections;
 
   // Section visibility helpers
@@ -130,14 +135,28 @@ export const FeaturesPanel: React.FC = () => {
   }, [config, sections, setConfig]);
 
   const handleUpdate = useCallback(<K extends keyof FeaturesConfig>(key: K, value: FeaturesConfig[K]) => {
-    setConfig({
-      ...config,
-      features: {
-        ...features,
-        [key]: value,
-      },
-    });
-  }, [config, features, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        features: {
+          ...config.features,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.features[device] || {};
+      setConfig({
+        ...config,
+        features: {
+          ...config.features,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   const handleItemUpdate = useCallback((index: number, item: FeaturesConfig['items'][0]) => {
     const newItems = [...features.items];
@@ -266,7 +285,7 @@ export const FeaturesPanel: React.FC = () => {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Features Settings"
-        subtitle="Configure the features section"
+        subtitle={`Configure the features section (${device})`}
       />
       
       <TabNavigation

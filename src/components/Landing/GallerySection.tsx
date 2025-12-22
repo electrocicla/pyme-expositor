@@ -26,6 +26,7 @@ interface GallerySectionProps {
   loading: boolean;
   isDarkMode: boolean;
   transparentBg?: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const GallerySection: React.FC<GallerySectionProps> = ({
@@ -36,8 +37,15 @@ const GallerySection: React.FC<GallerySectionProps> = ({
   loading,
   isDarkMode,
   transparentBg = false,
+  device = 'desktop',
 }) => {
   const { config } = useConfig();
+  
+  const gallery = React.useMemo(() => {
+    if (device === 'desktop') return config.gallery;
+    return { ...config.gallery, ...config.gallery[device] };
+  }, [config.gallery, device]);
+
   const theme = config.theme;
 
   // Render card content (shared across all card types)

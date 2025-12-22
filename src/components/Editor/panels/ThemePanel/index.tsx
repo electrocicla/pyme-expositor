@@ -8,6 +8,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, TabNavigation } from '../shared';
 import {
   themeTabs,
@@ -27,45 +28,87 @@ import { AdvancedTab } from './AdvancedTab';
  */
 export const ThemePanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<ThemeTabType>('colors');
 
   // Initialize theme config if not present
-  const theme: ThemeConfig = config.theme || defaultTheme;
+  const theme: ThemeConfig = device === 'desktop'
+    ? (config.theme || defaultTheme)
+    : { ...(config.theme || defaultTheme), ...(config.theme?.[device] || {}) };
 
   // Memoized update handler
   const handleUpdate = useCallback(<K extends keyof ThemeConfig>(
     key: K,
     value: ThemeConfig[K]
   ) => {
-    setConfig({
-      ...config,
-      theme: {
-        ...config.theme,
-        [key]: value,
-      },
-    });
-  }, [config, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          [key]: value,
+        },
+      });
+    } else {
+      const deviceConfig = config.theme?.[device] || {};
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          [device]: {
+            ...deviceConfig,
+            [key]: value,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Apply a color preset
   const applyColorPreset = useCallback((preset: ColorPreset) => {
-    setConfig({
-      ...config,
-      theme: {
-        ...config.theme,
-        primaryColor: preset.primary,
-        secondaryColor: preset.secondary,
-        accentColor: preset.accent,
-      },
-    });
-  }, [config, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          primaryColor: preset.primary,
+          secondaryColor: preset.secondary,
+          accentColor: preset.accent,
+        },
+      });
+    } else {
+      const deviceConfig = config.theme?.[device] || {};
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          [device]: {
+            ...deviceConfig,
+            primaryColor: preset.primary,
+            secondaryColor: preset.secondary,
+            accentColor: preset.accent,
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Reset theme to defaults
   const resetTheme = useCallback(() => {
-    setConfig({
-      ...config,
-      theme: defaultTheme,
-    });
-  }, [config, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        theme: defaultTheme,
+      });
+    } else {
+      // For mobile/tablet, reset means clearing the overrides
+      const { [device]: _, ...restTheme } = config.theme || {};
+      setConfig({
+        ...config,
+        theme: restTheme as ThemeConfig,
+      });
+    }
+  }, [config, setConfig, device]);
 
   // Render the active tab content
   const renderTabContent = () => {
@@ -92,7 +135,7 @@ export const ThemePanel: React.FC = () => {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Theme"
-        subtitle="Colors, typography, and styles"
+        subtitle={`Colors, typography, and styles (${device})`}
       />
       
       <TabNavigation

@@ -6,10 +6,11 @@
 import React, { useCallback, type ReactNode } from 'react';
 import { LayoutTemplate, Star, Sparkles, Image, MapPin, FileText } from 'lucide-react';
 import { useConfig } from '../../../../contexts/ConfigContext';
+import { useEditor } from '../../../../contexts/EditorContext';
 import { PanelHeader, Section, SectionHeader, Toggle, InfoBox } from '../shared';
 import type { SectionsConfig } from '../../../../types/config';
 
-type SectionKey = keyof SectionsConfig;
+type SectionKey = keyof Omit<SectionsConfig, 'mobile' | 'tablet'>;
 
 interface SectionItemProps {
   id: SectionKey;
@@ -108,48 +109,108 @@ const sectionMeta: Record<SectionKey, { name: string; description: string; icon:
 
 export const SectionsPanel: React.FC = () => {
   const { config, setConfig } = useConfig();
+  const { device } = useEditor();
   
-  const sections = config.sections;
+  // Calculate effective sections based on device
+  const sections = React.useMemo(() => {
+    if (device === 'desktop') return config.sections;
+    
+    const deviceOverrides = config.sections[device] || {};
+    const effectiveSections = { ...config.sections };
+    
+    // Apply overrides
+    Object.keys(deviceOverrides).forEach((key) => {
+      const sectionKey = key as SectionKey;
+      if (effectiveSections[sectionKey]) {
+        effectiveSections[sectionKey] = {
+          ...effectiveSections[sectionKey],
+          ...deviceOverrides[sectionKey],
+        };
+      }
+    });
+    
+    return effectiveSections;
+  }, [config.sections, device]);
 
   // Get sorted sections by order
   const sortedSections = Object.entries(sections)
-    .sort(([, a], [, b]) => a.order - b.order)
+    .filter(([key]) => key !== 'mobile' && key !== 'tablet')
+    .sort(([, a], [, b]) => (a as any).order - (b as any).order)
     .map(([key]) => key as SectionKey);
 
   const handleToggle = useCallback((key: SectionKey, enabled: boolean) => {
-    setConfig({
-      ...config,
-      sections: {
-        ...sections,
-        [key]: { ...sections[key], enabled },
-      },
-    });
-  }, [config, sections, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        sections: {
+          ...config.sections,
+          [key]: { ...config.sections[key], enabled },
+        },
+      });
+    } else {
+      const deviceOverrides = config.sections[device] || {};
+      setConfig({
+        ...config,
+        sections: {
+          ...config.sections,
+          [device]: {
+            ...deviceOverrides,
+            [key]: { 
+               ...(deviceOverrides[key] || config.sections[key]),
+               enabled 
+            },
+          },
+        },
+      });
+    }
+  }, [config, setConfig, device]);
 
   const handleMove = useCallback((key: SectionKey, direction: 'up' | 'down') => {
     const currentOrder = sections[key].order;
     const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
     
     // Find the section to swap with
-    const swapKey = Object.entries(sections).find(([, v]) => v.order === targetOrder)?.[0] as SectionKey | undefined;
+    const swapKey = sortedSections.find(k => sections[k].order === targetOrder);
     
     if (!swapKey) return;
     
-    setConfig({
-      ...config,
-      sections: {
-        ...sections,
-        [key]: { ...sections[key], order: targetOrder },
-        [swapKey]: { ...sections[swapKey], order: currentOrder },
-      },
-    });
-  }, [config, sections, setConfig]);
+    if (device === 'desktop') {
+      setConfig({
+        ...config,
+        sections: {
+          ...config.sections,
+          [key]: { ...config.sections[key], order: targetOrder },
+          [swapKey]: { ...config.sections[swapKey], order: currentOrder },
+        },
+      });
+    } else {
+      const deviceOverrides = config.sections[device] || {};
+      
+      setConfig({
+        ...config,
+        sections: {
+          ...config.sections,
+          [device]: {
+            ...deviceOverrides,
+            [key]: { 
+              ...(deviceOverrides[key] || config.sections[key]),
+              order: targetOrder 
+            },
+            [swapKey]: { 
+              ...(deviceOverrides[swapKey] || config.sections[swapKey]),
+              order: currentOrder 
+            },
+          },
+        },
+      });
+    }
+  }, [config, sections, setConfig, device, sortedSections]);
 
   return (
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Manage Sections"
-        subtitle="Enable, disable, and reorder page sections"
+        subtitle={`Enable, disable, and reorder page sections (${device})`}
       />
       
       <div className="flex-1 overflow-y-auto p-4">

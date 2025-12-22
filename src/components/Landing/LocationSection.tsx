@@ -13,6 +13,7 @@ interface LocationSectionProps {
   styles: DynamicStyles;
   animations: AnimationsConfig;
   transparentBg?: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const mapHeights = {
@@ -22,9 +23,19 @@ const mapHeights = {
   xl: '600px',
 };
 
-const LocationSection: React.FC<LocationSectionProps> = ({ styles, animations, transparentBg = false }) => {
+const LocationSection: React.FC<LocationSectionProps> = ({ 
+  styles, 
+  animations, 
+  transparentBg = false,
+  device = 'desktop',
+}) => {
   const { config } = useConfig();
-  const location = config.location;
+  
+  const location = React.useMemo(() => {
+    if (device === 'desktop') return config.location;
+    return { ...config.location, ...config.location[device] };
+  }, [config.location, device]);
+
   const theme = config.theme;
 
   // Check if section has any content to display

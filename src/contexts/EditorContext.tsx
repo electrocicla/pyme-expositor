@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
 export type SectionType = 'header' | 'hero' | 'features' | 'gallery' | 'media' | 'location' | 'footer' | 'theme' | 'effects' | 'sections';
+export type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
 interface EditorContextType {
   activeSection: SectionType | null;
@@ -14,6 +15,8 @@ interface EditorContextType {
   setIsLeftPanelOpen: (isOpen: boolean) => void;
   isRightPanelOpen: boolean;
   setIsRightPanelOpen: (isOpen: boolean) => void;
+  device: DeviceType;
+  setDevice: (device: DeviceType) => void;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -24,6 +27,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [rightPanelWidth, setRightPanelWidth] = useState(320);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [device, setDevice] = useState<DeviceType>('desktop');
 
   return (
     <EditorContext.Provider
@@ -38,6 +42,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsLeftPanelOpen,
         isRightPanelOpen,
         setIsRightPanelOpen,
+        device,
+        setDevice,
       }}
     >
       {children}

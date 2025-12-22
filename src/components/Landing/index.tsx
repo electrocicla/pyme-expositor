@@ -16,6 +16,7 @@ import { loadGoogleFont } from '../../utils/fonts';
 // Hooks
 import { useDynamicStyles } from './useDynamicStyles';
 import { useEffectsConfig } from './useEffectsConfig';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
 // Section Components
 import CursorEffects from './CursorEffects';
@@ -81,11 +82,18 @@ const LoadingScreen: React.FC = () => {
 /**
  * Inner landing content component
  */
-const LandingContent: React.FC = () => {
+interface LandingContentProps {
+  device?: 'desktop' | 'tablet' | 'mobile';
+}
+
+const LandingContent: React.FC<LandingContentProps> = ({ device: propDevice }) => {
   const [media, setMedia] = useState<ApiMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const { config, isLoading } = useConfig();
+  
+  const detectedDevice = useDeviceDetection();
+  const device = propDevice || detectedDevice;
 
   // Get theme safely
   const theme = config?.theme ?? {
@@ -99,8 +107,8 @@ const LandingContent: React.FC = () => {
   const isDarkMode = theme.mode === 'dark';
 
   // Use custom hooks for styles and effects
-  const styles = useDynamicStyles(config);
-  const effects = useEffectsConfig(config);
+  const styles = useDynamicStyles(config, device);
+  const effects = useEffectsConfig(config, device);
 
   // Sort sections by order and filter enabled
   // Memoize based on the actual sections object reference
@@ -114,14 +122,35 @@ const LandingContent: React.FC = () => {
       footer: { enabled: true, order: 6 },
     };
     
-    const sorted = (Object.entries(sectionsData) as [keyof SectionsConfig, { enabled: boolean; order: number }][])
+    // Get base sections (excluding mobile/tablet keys)
+    const baseSections = Object.entries(sectionsData)
+      .filter(([key]) => key !== 'mobile' && key !== 'tablet')
+      .reduce((acc, [key, val]) => {
+        acc[key] = val;
+        return acc;
+      }, {} as Record<string, any>);
+
+    // Apply overrides if needed
+    if (device !== 'desktop' && sectionsData[device]) {
+      const overrides = sectionsData[device];
+      if (overrides) {
+        Object.entries(overrides).forEach(([key, val]) => {
+          if (baseSections[key]) {
+            baseSections[key] = { ...baseSections[key], ...val };
+          }
+        });
+      }
+    }
+    
+    const sorted = Object.entries(baseSections)
       .filter(([, v]) => v.enabled)
       .sort(([, a], [, b]) => a.order - b.order)
-      .map(([key]) => key);
+      .map(([key]) => key as keyof SectionsConfig);
     
     return sorted;
   }, [
     config?.sections,
+    device
   ]);
 
   // Load Google Font
@@ -172,7 +201,7 @@ const LandingContent: React.FC = () => {
   const renderSection = (sectionKey: keyof SectionsConfig) => {
     switch (sectionKey) {
       case 'header':
-        return <HeaderSection key="header" styles={styles} />;
+        return <HeaderSection key="header" styles={styles} device={device} />;
       case 'hero':
         return (
           <HeroSection 
@@ -182,6 +211,7 @@ const LandingContent: React.FC = () => {
             bgEffectsEnabled={effects.background.enabled}
             bgType={effects.background.type}
             isDarkMode={isDarkMode}
+            device={device}
           />
         );
       case 'features':
@@ -191,6 +221,7 @@ const LandingContent: React.FC = () => {
             styles={styles}
             animations={effects.animations}
             transparentBg={effects.background.enabled}
+            device={device}
           />
         );
       case 'gallery':
@@ -204,6 +235,7 @@ const LandingContent: React.FC = () => {
             loading={loading}
             isDarkMode={isDarkMode}
             transparentBg={effects.background.enabled}
+            device={device}
           />
         );
       case 'location':
@@ -213,10 +245,11 @@ const LandingContent: React.FC = () => {
             styles={styles}
             animations={effects.animations}
             transparentBg={effects.background.enabled}
+            device={device}
           />
         );
       case 'footer':
-        return <FooterSection key="footer" styles={styles} transparentBg={effects.background.enabled} />;
+        return <FooterSection key="footer" styles={styles} transparentBg={effects.background.enabled} device={device} />;
       default:
         return null;
     }
@@ -371,16 +404,17 @@ const LandingContent: React.FC = () => {
  */
 interface LandingProps {
   previewMode?: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const Landing: React.FC<LandingProps> = ({ previewMode = false }) => {
+const Landing: React.FC<LandingProps> = ({ previewMode = false, device }) => {
   if (previewMode) {
-    return <LandingContent />;
+    return <LandingContent device={device} />;
   }
   
   return (
     <ConfigProvider mode="public">
-      <LandingContent />
+      <LandingContent device={device} />
     </ConfigProvider>
   );
 };

@@ -21,6 +21,7 @@ interface FeaturesSectionProps {
   styles: DynamicStyles;
   animations: AnimationsConfig;
   transparentBg?: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 // Map color names to PixelCard variants
@@ -156,9 +157,18 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ item, containerEffect, styles
   }
 };
 
-const FeaturesSection: React.FC<FeaturesSectionProps> = ({ styles, animations, transparentBg = false }) => {
+const FeaturesSection: React.FC<FeaturesSectionProps> = ({ 
+  styles, 
+  animations, 
+  transparentBg = false,
+  device = 'desktop'
+}) => {
   const { config } = useConfig();
-  const features = config.features;
+  
+  const features = React.useMemo(() => {
+    if (device === 'desktop') return config.features;
+    return { ...config.features, ...config.features[device] };
+  }, [config.features, device]);
 
   // If no items, don't render
   if (!features.items || features.items.length === 0) {

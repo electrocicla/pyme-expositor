@@ -26,6 +26,7 @@ interface HeroSectionProps {
   bgEffectsEnabled: boolean;
   bgType: string;
   isDarkMode: boolean;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 // Hero height mappings
@@ -83,9 +84,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   bgEffectsEnabled,
   bgType,
   isDarkMode,
+  device = 'desktop',
 }) => {
   const { config } = useConfig();
-  const hero = config.hero;
+  
+  const hero = React.useMemo(() => {
+    if (device === 'desktop') return config.hero;
+    return { ...config.hero, ...config.hero[device] };
+  }, [config.hero, device]);
 
   // Get height class
   const getHeightClass = (): string => {

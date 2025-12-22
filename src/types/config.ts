@@ -25,6 +25,8 @@ export interface EffectsConfig {
     count: number;
     color: string;
   };
+  mobile?: Partial<EffectsConfig>;
+  tablet?: Partial<EffectsConfig>;
 }
 
 // Hero Media Item - represents a single media in the hero gallery
@@ -82,15 +84,7 @@ export interface HeroConfig {
   paddingY: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   paddingX: 'sm' | 'md' | 'lg' | 'xl';
   contentMaxWidth: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  // Mobile specific overrides
-  mobile?: {
-    textAlign?: 'left' | 'center' | 'right';
-    titleSize?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-    subtitleSize?: 'sm' | 'md' | 'lg' | 'xl';
-    paddingY?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-    paddingX?: 'sm' | 'md' | 'lg' | 'xl';
-    hideMedia?: boolean;
-  };
+  
   // Media positioning for split layout
   mediaPosition?: 'left' | 'right';
   mediaFit?: 'cover' | 'contain' | 'fill';
@@ -119,6 +113,11 @@ export interface HeroConfig {
   secondaryMediaType?: 'image' | 'video';
   secondaryMediaFit?: 'cover' | 'contain' | 'fill';
   secondaryMediaRounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+
+  // Mobile/Tablet specific overrides
+  hideMedia?: boolean;
+  mobile?: Partial<HeroConfig>;
+  tablet?: Partial<HeroConfig>;
 }
 
 // Navigation Link Container Style Types (Tailwind-based)
@@ -148,13 +147,35 @@ export type NavLinkHoverAnimation =
   | 'bounce';
 
 // Section visibility and order configuration
+export interface SectionState {
+  enabled: boolean;
+  order: number;
+}
+
 export interface SectionsConfig {
-  header: { enabled: boolean; order: number };
-  hero: { enabled: boolean; order: number };
-  features: { enabled: boolean; order: number };
-  gallery: { enabled: boolean; order: number };
-  location: { enabled: boolean; order: number };
-  footer: { enabled: boolean; order: number };
+  header: SectionState;
+  hero: SectionState;
+  features: SectionState;
+  gallery: SectionState;
+  location: SectionState;
+  footer: SectionState;
+
+  mobile?: {
+    header?: SectionState;
+    hero?: SectionState;
+    features?: SectionState;
+    gallery?: SectionState;
+    location?: SectionState;
+    footer?: SectionState;
+  };
+  tablet?: {
+    header?: SectionState;
+    hero?: SectionState;
+    features?: SectionState;
+    gallery?: SectionState;
+    location?: SectionState;
+    footer?: SectionState;
+  };
 }
 
 // Features Section Config (formerly hardcoded "Interactive Features")
@@ -173,6 +194,9 @@ export interface FeaturesConfig {
     color?: 'blue' | 'pink' | 'yellow' | 'green' | 'purple' | 'orange';
   }>;
   animateOnScroll: boolean;
+
+  mobile?: Partial<FeaturesConfig>;
+  tablet?: Partial<FeaturesConfig>;
 }
 
 // Location Section Config (new - Google Maps)
@@ -194,12 +218,12 @@ export interface LocationConfig {
     hours?: string;
   };
   layout: 'map-only' | 'map-left' | 'map-right' | 'map-top';
+
+  mobile?: Partial<LocationConfig>;
+  tablet?: Partial<LocationConfig>;
 }
 
-export interface SiteConfig {
-  // Section visibility control
-  sections: SectionsConfig;
-  header: {
+export interface HeaderConfig {
     title: string;
     logoUrl?: string;
     logoSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
@@ -238,13 +262,12 @@ export interface SiteConfig {
     navMagnetStrength?: 'light' | 'normal' | 'strong';
     navGlowColor?: string;
     navGlowIntensity?: 'soft' | 'normal' | 'strong';
-  };
-  hero: HeroConfig;
-  // Features section config (formerly hardcoded)
-  features: FeaturesConfig;
-  // Location section config (new)
-  location: LocationConfig;
-  gallery: {
+
+    mobile?: Partial<HeaderConfig>;
+    tablet?: Partial<HeaderConfig>;
+}
+
+export interface GalleryConfig {
     title: string;
     subtitle?: string;
     showTitle?: boolean;
@@ -263,8 +286,12 @@ export interface SiteConfig {
     viewAllText?: string;
     viewAllUrl?: string;
     animateOnScroll?: boolean;
-  };
-  footer: {
+
+    mobile?: Partial<GalleryConfig>;
+    tablet?: Partial<GalleryConfig>;
+}
+
+export interface FooterConfig {
     layout?: 'simple' | 'columns' | 'centered' | 'minimal';
     showLogo?: boolean;
     logoUrl?: string;
@@ -298,8 +325,12 @@ export interface SiteConfig {
     copyrightText?: string;
     showDivider?: boolean;
     legalLinks?: Array<{ label: string; url: string; id: string }>;
-  };
-  theme: {
+
+    mobile?: Partial<FooterConfig>;
+    tablet?: Partial<FooterConfig>;
+}
+
+export interface ThemeConfig {
     primaryColor: string;
     secondaryColor: string;
     accentColor?: string;
@@ -318,7 +349,23 @@ export interface SiteConfig {
     buttonRounded?: 'none' | 'sm' | 'md' | 'lg' | 'full';
     // Shadow
     shadowIntensity?: 'none' | 'sm' | 'md' | 'lg';
-  };
+
+    mobile?: Partial<ThemeConfig>;
+    tablet?: Partial<ThemeConfig>;
+}
+
+export interface SiteConfig {
+  // Section visibility control
+  sections: SectionsConfig;
+  header: HeaderConfig;
+  hero: HeroConfig;
+  // Features section config (formerly hardcoded)
+  features: FeaturesConfig;
+  // Location section config (new)
+  location: LocationConfig;
+  gallery: GalleryConfig;
+  footer: FooterConfig;
+  theme: ThemeConfig;
   effects?: EffectsConfig;
 }
 

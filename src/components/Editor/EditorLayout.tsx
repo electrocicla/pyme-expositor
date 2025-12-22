@@ -14,11 +14,12 @@ const EditorContent: React.FC = () => {
     isLeftPanelOpen,
     setIsLeftPanelOpen,
     isRightPanelOpen,
-    setIsRightPanelOpen
+    setIsRightPanelOpen,
+    device,
+    setDevice
   } = useEditor();
 
   const [previewScale, setPreviewScale] = useState(0.85);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   
   // Resizing logic
   const isResizingLeft = useRef(false);
@@ -109,17 +110,17 @@ const EditorContent: React.FC = () => {
 
             {/* Device Toggles */}
             <div className="flex bg-slate-800/50 rounded-lg p-1">
-              {(['desktop', 'tablet', 'mobile'] as const).map((device) => (
+              {(['desktop', 'tablet', 'mobile'] as const).map((d) => (
                 <button
-                  key={device}
-                  onClick={() => setPreviewDevice(device)}
+                  key={d}
+                  onClick={() => setDevice(d)}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                    previewDevice === device
+                    device === d
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
                       : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                   }`}
                 >
-                  {device.charAt(0).toUpperCase() + device.slice(1)}
+                  {d.charAt(0).toUpperCase() + d.slice(1)}
                 </button>
               ))}
             </div>
@@ -166,7 +167,7 @@ const EditorContent: React.FC = () => {
            <div 
               className="relative transition-all duration-500 ease-out origin-center shadow-2xl"
               style={{ 
-                width: deviceWidths[previewDevice],
+                width: deviceWidths[device],
                 height: '100%',
                 maxWidth: '100%',
                 transform: `scale(${previewScale})`,
@@ -174,7 +175,7 @@ const EditorContent: React.FC = () => {
             >
               <div className="w-full h-full bg-white rounded-lg overflow-hidden shadow-2xl border border-slate-800/50">
               <div className="w-full h-full overflow-y-auto custom-scrollbar bg-white">
-                 <Landing previewMode={true} />
+                 <Landing previewMode={true} device={device} />
               </div>
               </div>
             </div>

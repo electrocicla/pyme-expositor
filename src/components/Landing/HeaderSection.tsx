@@ -12,6 +12,7 @@ import StarBorder from '../ReactBits/StarBorder';
 
 interface HeaderSectionProps {
   styles: DynamicStyles;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 // Map logo size values to actual heights
@@ -99,24 +100,29 @@ const glowIntensityMap: Record<string, string> = {
   'intense': '0 0 40px',
 };
 
-const HeaderSection: React.FC<HeaderSectionProps> = ({ styles }) => {
+const HeaderSection: React.FC<HeaderSectionProps> = ({ styles, device = 'desktop' }) => {
   const { config } = useConfig();
   
+  const header = React.useMemo(() => {
+    if (device === 'desktop') return config.header;
+    return { ...config.header, ...config.header[device] };
+  }, [config.header, device]);
+  
   // Get logo settings
-  const logoSize = config.header.logoSize || 'md';
-  const logoMaxWidth = config.header.logoMaxWidth || 'auto';
-  const logoFit = config.header.logoFit || 'contain';
-  const logoAspect = config.header.logoAspect || 'auto';
-  const hideTitle = config.header.hideTitle ?? false;
+  const logoSize = header.logoSize || 'md';
+  const logoMaxWidth = header.logoMaxWidth || 'auto';
+  const logoFit = header.logoFit || 'contain';
+  const logoAspect = header.logoAspect || 'auto';
+  const hideTitle = header.hideTitle ?? false;
 
   // Get nav link settings - NEW SEPARATED APPROACH
-  const navLinkContainerStyle = config.header.navLinkContainerStyle || 'none';
-  const navLinkEffect = config.header.navLinkEffect || 'none';
-  const navLinkHoverAnimation = config.header.navLinkHoverAnimation || 'none';
-  const navLinkSize = config.header.navLinkSize || 'sm';
-  const navLinkWeight = config.header.navLinkWeight || 'medium';
-  const navLinkSpacing = config.header.navLinkSpacing || 'normal';
-  const navLinkGap = config.header.navLinkGap || 'md';
+  const navLinkContainerStyle = header.navLinkContainerStyle || 'none';
+  const navLinkEffect = header.navLinkEffect || 'none';
+  const navLinkHoverAnimation = header.navLinkHoverAnimation || 'none';
+  const navLinkSize = header.navLinkSize || 'sm';
+  const navLinkWeight = header.navLinkWeight || 'medium';
+  const navLinkSpacing = header.navLinkSpacing || 'normal';
+  const navLinkGap = header.navLinkGap || 'md';
 
   // Color settings (new)
   const navLinkColor = config.header.navLinkColor || undefined;
