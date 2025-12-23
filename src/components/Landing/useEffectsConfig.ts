@@ -116,7 +116,7 @@ export function useEffectsConfig(config: SiteConfig, device: 'desktop' | 'tablet
     
     console.warn('useEffectsConfig: Returning config with cursor.enabled =', result.cursor.enabled);
     return result;
-  }, [config]);
+  }, [config, device]);
 }
 
 export default useEffectsConfig;

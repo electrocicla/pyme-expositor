@@ -162,7 +162,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
       }
     };
     fetchConfig();
-  }, [mode]);
+  }, [mode, setConfig]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -204,7 +204,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
     setConfig(newConfig);
     setIsDirty(true);
     scheduleSave();
-  }, [scheduleSave]);
+  }, [scheduleSave, setConfig]);
 
   const saveConfig = useCallback(async () => {
     if (mode !== 'editor') return;

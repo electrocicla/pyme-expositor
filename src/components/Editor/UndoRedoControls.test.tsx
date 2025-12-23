@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { UndoRedoControls } from './UndoRedoControls';
-import { ConfigProvider } from '../../contexts/ConfigContext';
 
 // Mock the useConfig hook
 const mockUseConfig = vi.fn();

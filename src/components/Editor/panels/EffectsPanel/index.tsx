@@ -6,7 +6,7 @@
  * Each section is a separate component with its own responsibility.
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { EffectsConfig } from '../../../../types/config';
 import { useConfig } from '../../../../contexts/ConfigContext';
 import { useEditor } from '../../../../contexts/EditorContext';
@@ -28,7 +28,7 @@ export const EffectsPanel: React.FC = () => {
   const { device } = useEditor();
 
   // Initialize effects config if not present, merging device-specific overrides with defaults
-  const effects: EffectsConfig = device === 'desktop'
+  const effects: EffectsConfig = useMemo(() => device === 'desktop'
     ? (config.effects || defaultEffects)
     : {
         cursor: { ...defaultEffects.cursor, ...(config.effects?.cursor || {}), ...(config.effects?.[device]?.cursor || {}) },
@@ -36,7 +36,7 @@ export const EffectsPanel: React.FC = () => {
         cards: { ...defaultEffects.cards, ...(config.effects?.cards || {}), ...(config.effects?.[device]?.cards || {}) },
         animations: { ...defaultEffects.animations, ...(config.effects?.animations || {}), ...(config.effects?.[device]?.animations || {}) },
         particles: { ...defaultEffects.particles, ...(config.effects?.particles || {}), ...(config.effects?.[device]?.particles || {}) },
-      };
+      }, [config.effects, device]);
 
   // Generic update handler for any effect section
   const updateEffects = useCallback(<K extends keyof EffectsConfig>(

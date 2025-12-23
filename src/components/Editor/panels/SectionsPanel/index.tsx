@@ -135,7 +135,7 @@ export const SectionsPanel: React.FC = () => {
   // Get sorted sections by order
   const sortedSections = Object.entries(sections)
     .filter(([key]) => key !== 'mobile' && key !== 'tablet')
-    .sort(([, a], [, b]) => (a as any).order - (b as any).order)
+    .sort(([, a], [, b]) => a.order - b.order)
     .map(([key]) => key as SectionKey);
 
   const handleToggle = useCallback((key: SectionKey, enabled: boolean) => {

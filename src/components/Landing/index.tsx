@@ -128,7 +128,7 @@ const LandingContent: React.FC<LandingContentProps> = ({ device: propDevice }) =
       .reduce((acc, [key, val]) => {
         acc[key] = val;
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, SectionsConfig[keyof SectionsConfig]>);
 
     // Apply overrides if needed
     if (device !== 'desktop' && sectionsData[device]) {

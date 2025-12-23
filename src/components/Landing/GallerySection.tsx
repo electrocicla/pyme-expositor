@@ -37,8 +37,14 @@ const GallerySection: React.FC<GallerySectionProps> = ({
   loading,
   isDarkMode,
   transparentBg = false,
+  device = 'desktop',
 }) => {
   const { config } = useConfig();
+
+  const gallery = React.useMemo(() => {
+    if (device === 'desktop') return config.gallery;
+    return { ...config.gallery, ...config.gallery[device] };
+  }, [config.gallery, device]);
 
   const theme = config.theme;
 
@@ -197,9 +203,9 @@ const GallerySection: React.FC<GallerySectionProps> = ({
             className="text-3xl font-bold mb-4"
             style={{ color: styles.textColor }}
           >
-            {config.gallery.title}
+            {gallery.title}
           </h2>
-          {config.gallery.showFilters && (
+          {gallery.showFilters && (
             <div className="flex justify-center gap-2 mt-4">
               <button 
                 className="px-4 py-1.5 text-sm font-medium transition-all"
@@ -234,8 +240,8 @@ const GallerySection: React.FC<GallerySectionProps> = ({
         ) : (
           /* Media Grid */
           <div className={`grid gap-8 ${
-            config.gallery.columns === '2' ? 'grid-cols-1 sm:grid-cols-2' :
-            config.gallery.columns === '4' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+            gallery.columns === '2' ? 'grid-cols-1 sm:grid-cols-2' :
+            gallery.columns === '4' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
             'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
           }`}>
             {media.map((item, index) => renderCard(item, index))}
