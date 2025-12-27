@@ -1,7 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pyme-expositor-worker",
-  "type": "service",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-14",
   "compatibility_flags": [

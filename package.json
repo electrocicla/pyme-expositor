@@ -10,9 +10,9 @@
     "lint": "eslint .",
     "test": "vitest",
     "preview": "vite preview",
-    "deploy:pages": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor",
+    "deploy:pages": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor --commit-dirty=true",
     "deploy:worker": "cd worker && pnpm run deploy",
-    "deploy": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor && cd worker && pnpm run deploy"
+    "deploy": "pnpm typecheck && pnpm build && wrangler pages deploy dist --project-name=pyme-expositor --commit-dirty=true && cd worker && pnpm run deploy"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",

@@ -12,6 +12,7 @@ import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { ConfigProvider, useConfig } from '../../contexts/ConfigContext';
 import { api, type ApiMedia } from '../../utils/api';
 import { loadGoogleFont } from '../../utils/fonts';
+import type { SectionState } from '../../types/config';
 
 // Hooks
 import { useDynamicStyles } from './useDynamicStyles';
@@ -126,9 +127,9 @@ const LandingContent: React.FC<LandingContentProps> = ({ device: propDevice }) =
     const baseSections = Object.entries(sectionsData)
       .filter(([key]) => key !== 'mobile' && key !== 'tablet')
       .reduce((acc, [key, val]) => {
-        acc[key] = val;
+        acc[key] = val as SectionState;
         return acc;
-      }, {} as Record<string, SectionsConfig[keyof SectionsConfig]>);
+      }, {} as Record<string, SectionState>);
 
     // Apply overrides if needed
     if (device !== 'desktop' && sectionsData[device]) {
