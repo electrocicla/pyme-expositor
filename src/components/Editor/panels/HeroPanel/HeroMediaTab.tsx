@@ -23,9 +23,10 @@ import { LogoSelector } from '../LogoSelector';
 interface HeroMediaTabProps {
   config: HeroConfig;
   onUpdate: <K extends keyof HeroConfig>(key: K, value: HeroConfig[K]) => void;
+  onCommit?: <K extends keyof HeroConfig>(key: K, value: HeroConfig[K]) => Promise<void>;
 }
 
-export const HeroMediaTab: React.FC<HeroMediaTabProps> = ({ config, onUpdate }) => {
+export const HeroMediaTab: React.FC<HeroMediaTabProps> = ({ config, onUpdate, onCommit }) => {
   const showSliderSettings = ['slider', 'carousel', 'fade'].includes(config.mediaDisplayMode || 'single');
   const showVideoControls = config.mediaItems?.some(item => item.type === 'video') || config.mediaType === 'video';
   const isDualMediaEnabled = config.dualMediaLayout && config.dualMediaLayout !== 'disabled';
@@ -66,6 +67,7 @@ export const HeroMediaTab: React.FC<HeroMediaTabProps> = ({ config, onUpdate }) 
                 <LogoSelector
                   value={config.secondaryMediaUrl || ''}
                   onChange={(url) => onUpdate('secondaryMediaUrl', url)}
+                  onSaveChanges={onCommit ? async (url) => onCommit('secondaryMediaUrl', url) : undefined}
                   allowedTypes={['image', 'video']}
                 />
                 

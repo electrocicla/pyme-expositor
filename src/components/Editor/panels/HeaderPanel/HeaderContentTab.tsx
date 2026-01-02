@@ -12,9 +12,10 @@ import { LogoSelector } from '../LogoSelector';
 interface HeaderContentTabProps {
   header: HeaderConfig;
   onUpdate: (key: string, value: unknown) => void;
+  onCommit?: (key: string, value: unknown) => Promise<void>;
 }
 
-export const HeaderContentTab: React.FC<HeaderContentTabProps> = ({ header, onUpdate }) => {
+export const HeaderContentTab: React.FC<HeaderContentTabProps> = ({ header, onUpdate, onCommit }) => {
   return (
     <div className="space-y-6">
       {/* Site Identity */}
@@ -42,6 +43,7 @@ export const HeaderContentTab: React.FC<HeaderContentTabProps> = ({ header, onUp
             <LogoSelector
               value={header.logoUrl || ''}
               onChange={(url) => onUpdate('logoUrl', url)}
+              onSaveChanges={onCommit ? async (url) => onCommit('logoUrl', url) : undefined}
               allowedTypes={['image']}
             />
           </div>

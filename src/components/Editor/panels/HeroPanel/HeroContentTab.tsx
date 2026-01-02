@@ -12,9 +12,10 @@ import { LogoSelector } from '../LogoSelector';
 interface HeroContentTabProps {
   config: HeroConfig;
   onUpdate: <K extends keyof HeroConfig>(key: K, value: HeroConfig[K]) => void;
+  onCommit?: <K extends keyof HeroConfig>(key: K, value: HeroConfig[K]) => Promise<void>;
 }
 
-export const HeroContentTab: React.FC<HeroContentTabProps> = ({ config, onUpdate }) => {
+export const HeroContentTab: React.FC<HeroContentTabProps> = ({ config, onUpdate, onCommit }) => {
   const isDualMediaEnabled = config.dualMediaLayout && config.dualMediaLayout !== 'disabled';
   const showDualMediaOptions = config.template === 'split' || config.template === 'dual-media';
   const isDualMediaTemplate = config.template === 'dual-media';
@@ -80,6 +81,7 @@ export const HeroContentTab: React.FC<HeroContentTabProps> = ({ config, onUpdate
                   <LogoSelector
                     value={config.secondaryMediaUrl || ''}
                     onChange={(url) => onUpdate('secondaryMediaUrl', url)}
+                    onSaveChanges={onCommit ? async (url) => onCommit('secondaryMediaUrl', url) : undefined}
                     allowedTypes={['image', 'video']}
                   />
                 </div>

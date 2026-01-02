@@ -17,7 +17,7 @@ import { HeaderLinkStyleTab } from './HeaderLinkStyleTab';
 import type { SectionsConfig } from '../../../../types/config';
 
 export const HeaderPanel: React.FC = () => {
-  const { config, setConfig } = useConfig();
+  const { config, setConfig, saveConfig } = useConfig();
   const { device } = useEditor();
   const { activeTab, setActiveTab } = useTabNavigation(headerTabs[0].id);
 
@@ -81,6 +81,30 @@ export const HeaderPanel: React.FC = () => {
     }
   };
 
+  const handleHeaderCommit = useCallback(async (key: string, value: unknown) => {
+    const nextConfig = device === 'desktop'
+      ? {
+          ...config,
+          header: {
+            ...config.header,
+            [key]: value,
+          },
+        }
+      : {
+          ...config,
+          header: {
+            ...config.header,
+            [device]: {
+              ...(config.header[device] || {}),
+              [key]: value,
+            },
+          },
+        };
+
+    setConfig(nextConfig);
+    await saveConfig(nextConfig);
+  }, [config, device, saveConfig, setConfig]);
+
   const renderActiveTab = () => {
     const effectiveHeader = device === 'desktop'
       ? config.header
@@ -88,7 +112,7 @@ export const HeaderPanel: React.FC = () => {
 
     switch (activeTab) {
       case 'content':
-        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
+        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} onCommit={handleHeaderCommit} />;
       case 'layout':
         return <HeaderLayoutTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       case 'behavior':
@@ -98,7 +122,7 @@ export const HeaderPanel: React.FC = () => {
       case 'linkstyle':
         return <HeaderLinkStyleTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
       default:
-        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} />;
+        return <HeaderContentTab header={effectiveHeader} onUpdate={handleHeaderUpdate} onCommit={handleHeaderCommit} />;
     }
   };
 

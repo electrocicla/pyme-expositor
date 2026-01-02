@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ConfigProvider, useConfig } from '../ConfigContext';
-import { defaultConfig } from '../../types/config';
+import { ConfigProvider, useConfig } from './ConfigContext';
+import { defaultConfig } from '../types/config';
 import React from 'react';
 
 // Test component that uses the config context

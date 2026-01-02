@@ -31,6 +31,7 @@ interface Media {
 interface LogoSelectorProps {
   value: string;
   onChange: (url: string) => void;
+  onSaveChanges?: (url: string) => Promise<void>;
   allowedTypes?: ('image' | 'video')[];
 }
 
@@ -40,24 +41,29 @@ function LogoSelectorModal({
   onClose,
   value,
   onChange,
+  onSaveChanges,
   allowedTypes,
 }: {
   isOpen: boolean;
   onClose: () => void;
   value: string;
   onChange: (url: string) => void;
+  onSaveChanges?: (url: string) => Promise<void>;
   allowedTypes: ('image' | 'video')[];
 }) {
   const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
   const [error, setError] = useState<string | null>(null);
   const [selectedUrl, setSelectedUrl] = useState<string>(value);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Sync selected when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedUrl(value);
+      setSaveError(null);
       fetchMedia();
     }
   }, [isOpen, value]);
@@ -104,15 +110,51 @@ function LogoSelectorModal({
     }
   };
 
-  const handleDone = () => {
+  const handleSave = async () => {
+    setSaveError(null);
+
+    // Always update local/global state first for immediate UI consistency.
     onChange(selectedUrl);
-    onClose();
+
+    if (!onSaveChanges) {
+      onClose();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSaveChanges(selectedUrl);
+      onClose();
+    } catch (err) {
+      console.error('LogoSelector: Save changes failed:', err);
+      setSaveError('Failed to save changes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    setSaveError(null);
     setSelectedUrl('');
+
+    // Update local/global state first.
     onChange('');
-    onClose();
+
+    if (!onSaveChanges) {
+      onClose();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSaveChanges('');
+      onClose();
+    } catch (err) {
+      console.error('LogoSelector: Remove + save failed:', err);
+      setSaveError('Failed to save changes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -323,6 +365,7 @@ function LogoSelectorModal({
             {value && (
               <button
                 onClick={handleRemove}
+                disabled={isSaving}
                 className="px-5 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all font-medium flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
@@ -331,19 +374,30 @@ function LogoSelectorModal({
             )}
             <button
               onClick={onClose}
+              disabled={isSaving}
               className="px-5 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium"
             >
               Cancel
             </button>
             <button
-              onClick={handleDone}
+              onClick={handleSave}
+              disabled={isSaving}
               className="px-8 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/30"
             >
               <Check className="w-5 h-5" />
-              Done
+              Save Changes
             </button>
           </div>
         </div>
+
+        {saveError && (
+          <div className="px-5 pb-5 bg-slate-800/50">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>{saveError}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -352,7 +406,7 @@ function LogoSelectorModal({
   return createPortal(modalContent, document.body);
 }
 
-export function LogoSelector({ value, onChange, allowedTypes = ['image'] }: LogoSelectorProps) {
+export function LogoSelector({ value, onChange, onSaveChanges, allowedTypes = ['image'] }: LogoSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -406,6 +460,7 @@ export function LogoSelector({ value, onChange, allowedTypes = ['image'] }: Logo
         onClose={() => setIsOpen(false)}
         value={value}
         onChange={onChange}
+        onSaveChanges={onSaveChanges}
         allowedTypes={allowedTypes}
       />
     </div>

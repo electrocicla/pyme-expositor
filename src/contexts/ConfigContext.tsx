@@ -7,7 +7,7 @@ import { api } from '../utils/api';
 interface ConfigContextType {
   config: SiteConfig;
   setConfig: (config: SiteConfig) => void;
-  saveConfig: () => Promise<void>;
+  saveConfig: (configOverride?: SiteConfig) => Promise<void>;
   publishConfig: () => Promise<void>;
   isLoading: boolean;
   isDirty: boolean;
@@ -206,7 +206,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
     scheduleSave();
   }, [scheduleSave, setConfig]);
 
-  const saveConfig = useCallback(async () => {
+  const saveConfig = useCallback(async (configOverride?: SiteConfig) => {
     if (mode !== 'editor') return;
     
     // Cancel pending auto-save
@@ -214,9 +214,13 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
       clearTimeout(saveTimeoutRef.current);
     }
     
+    const configToSave = configOverride ?? configRef.current;
+    // Keep the ref in sync to avoid saving stale state in follow-up calls.
+    configRef.current = configToSave;
+
     setIsSaving(true);
     try {
-      await api.saveConfig(configRef.current);
+      await api.saveConfig(configToSave);
       setIsDirty(false);
       setLastSaved(new Date());
     } catch (error) {

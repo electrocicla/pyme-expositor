@@ -23,7 +23,7 @@ import { HeroEffectsTab } from './HeroEffectsTab';
  * Manages tab navigation and delegates to specialized sub-components
  */
 export const HeroPanel: React.FC = () => {
-  const { config, setConfig } = useConfig();
+  const { config, setConfig, saveConfig } = useConfig();
   const { device } = useEditor();
   const [activeTab, setActiveTab] = useState<HeroTabType>('content');
 
@@ -92,6 +92,33 @@ export const HeroPanel: React.FC = () => {
     }
   }, [config, setConfig, device]);
 
+  const handleCommit = useCallback(async <K extends keyof HeroConfig>(
+    key: K,
+    value: HeroConfig[K]
+  ) => {
+    const nextConfig = device === 'desktop'
+      ? {
+          ...config,
+          hero: {
+            ...config.hero,
+            [key]: value,
+          },
+        }
+      : {
+          ...config,
+          hero: {
+            ...config.hero,
+            [device]: {
+              ...(config.hero[device] || {}),
+              [key]: value,
+            },
+          },
+        };
+
+    setConfig(nextConfig);
+    await saveConfig(nextConfig);
+  }, [config, device, saveConfig, setConfig]);
+
   // Render the active tab content
   const renderTabContent = () => {
     const effectiveConfig = device === 'desktop' 
@@ -101,6 +128,7 @@ export const HeroPanel: React.FC = () => {
     const props = {
       config: effectiveConfig,
       onUpdate: handleUpdate,
+      onCommit: handleCommit,
     };
 
     switch (activeTab) {
