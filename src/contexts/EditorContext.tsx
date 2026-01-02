@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
-export type SectionType = 'header' | 'hero' | 'features' | 'gallery' | 'media' | 'location' | 'footer' | 'theme' | 'effects' | 'sections';
+export type SectionType = 'header' | 'hero' | 'features' | 'gallery' | 'media' | 'location' | 'footer' | 'theme' | 'effects' | 'sections' | 'layouts' | 'elements';
 export type DeviceType = 'desktop' | 'tablet' | 'mobile';
+export type EditorMode = 'content' | 'layout';
 
 interface EditorContextType {
   activeSection: SectionType | null;
@@ -17,6 +18,8 @@ interface EditorContextType {
   setIsRightPanelOpen: (isOpen: boolean) => void;
   device: DeviceType;
   setDevice: (device: DeviceType) => void;
+  editorMode: EditorMode;
+  setEditorMode: (mode: EditorMode) => void;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -28,6 +31,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [device, setDevice] = useState<DeviceType>('desktop');
+  const [editorMode, setEditorMode] = useState<EditorMode>('content');
 
   return (
     <EditorContext.Provider
@@ -44,6 +48,8 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsRightPanelOpen,
         device,
         setDevice,
+        editorMode,
+        setEditorMode,
       }}
     >
       {children}
