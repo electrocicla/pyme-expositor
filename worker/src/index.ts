@@ -560,6 +560,54 @@ app.delete('/api/protected/layouts/:id', async (c) => {
   }
 })
 
+app.post('/api/protected/layouts/:id/publish', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.expositor_db
+
+    const layout = await db
+      .prepare('SELECT id, name, template, elements_json, is_preset, created_at, updated_at FROM layouts WHERE id = ?')
+      .bind(id)
+      .first<LayoutRowRaw>()
+
+    if (!layout) return c.json({ error: 'Layout not found' }, 404)
+
+    const publishedKey = `layout:${id}:published`
+    const configJson = JSON.stringify({
+      id: layout.id,
+      name: layout.name,
+      template: layout.template,
+      elements: safeJsonParse(layout.elements_json),
+      is_preset: layout.is_preset,
+      created_at: layout.created_at,
+      updated_at: layout.updated_at,
+    })
+
+    const existing = await db
+      .prepare('SELECT id FROM site_config WHERE key = ?')
+      .bind(publishedKey)
+      .first<{ id: number }>()
+
+    if (existing) {
+      await db
+        .prepare("UPDATE site_config SET config = ?, updated_at = datetime('now') WHERE key = ?")
+        .bind(configJson, publishedKey)
+        .run()
+    } else {
+      await db
+        .prepare("INSERT INTO site_config (key, config, updated_at) VALUES (?, ?, datetime('now'))")
+        .bind(publishedKey, configJson)
+        .run()
+    }
+
+    console.warn(`Layout ${id} published successfully`)
+    return c.json({ success: true, message: 'Layout published' })
+  } catch (error) {
+    console.error('Error publishing layout:', error)
+    return c.json({ error: 'Failed to publish layout' }, 500)
+  }
+})
+
 // Serve media files from R2 storage
 app.get('/media/:key', async (c) => {
   try {

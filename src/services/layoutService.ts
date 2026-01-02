@@ -53,4 +53,8 @@ export const layoutService = {
   async remove(id: string): Promise<void> {
     await api.delete<{ success: true }>(`/protected/layouts/${encodeURIComponent(id)}`)
   },
+
+  async publish(id: string): Promise<void> {
+    await api.post<{ success: true }>(`/protected/layouts/${encodeURIComponent(id)}/publish`, {})
+  },
 }

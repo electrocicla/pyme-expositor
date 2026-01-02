@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Copy, Download, Save, Trash2 } from 'lucide-react';
+import { Copy, Download, Save, Trash2, Share2 } from 'lucide-react';
 import { useLayout } from '../../../contexts/LayoutContext';
 import { getAuthToken } from '../../../utils/api';
+import { layoutService } from '../../../services/layoutService';
 
 const toDisplayDate = (iso: string): string => {
   const date = new Date(iso);
@@ -30,6 +31,7 @@ export const SavedLayoutsPanel: React.FC = () => {
   const [layoutName, setLayoutName] = useState<string>('');
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState<string | null>(null);
 
   const sortedLayouts = useMemo(() => {
     return [...savedLayouts].sort((a, b) => {
@@ -58,6 +60,18 @@ export const SavedLayoutsPanel: React.FC = () => {
       await action();
     } finally {
       setPendingActionId(null);
+    }
+  };
+
+  const handlePublish = async (layoutId: string): Promise<void> => {
+    setIsPublishing(layoutId);
+    try {
+      await layoutService.publish(layoutId);
+      console.warn(`Layout ${layoutId} published successfully`);
+    } catch (error) {
+      console.error('Failed to publish layout:', error);
+    } finally {
+      setIsPublishing(null);
     }
   };
 
@@ -147,6 +161,16 @@ export const SavedLayoutsPanel: React.FC = () => {
                         title="Duplicate"
                       >
                         <Copy size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePublish(layout.id)}
+                        disabled={!isAuthed || isPublishing === layout.id}
+                        className="p-2 rounded hover:bg-green-500/20 text-slate-300 hover:text-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={`Publish layout ${layout.name}`}
+                        title="Publish"
+                      >
+                        <Share2 size={16} />
                       </button>
                       <button
                         type="button"
