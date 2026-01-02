@@ -328,7 +328,44 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     const dualSplit = dualMediaSplitStyles[hero.dualMediaSplit || '50-50'];
     const secondaryRounded = hero.secondaryMediaRounded || 'lg';
     const secondaryFit = hero.secondaryMediaFit || 'contain';
-    const isDualStacked = hero.dualMediaLayout === 'stacked';
+    const isDualMediaEnabled = hero.dualMediaLayout && hero.dualMediaLayout !== 'disabled';
+    const isDualStacked = isDualMediaEnabled && hero.dualMediaLayout === 'stacked';
+
+    // If dual media is disabled, render only primary media (even if secondaryMediaUrl exists)
+    if (!isDualMediaEnabled || !hero.secondaryMediaUrl) {
+      return (
+        <div className="w-full max-w-6xl mx-auto">
+          <AnimateOnScroll
+            animation={animations.enabled ? 'zoom' : 'fade'}
+            duration={animations.duration}
+            delay={animations.stagger ? 200 : 0}
+            className="w-full"
+          >
+            <div className={`relative overflow-hidden ${mediaRoundedClasses[mediaRounded]} ${mediaShadowClasses[mediaShadow]}`}>
+              <HeroMediaSlider
+                items={mediaItems}
+                displayMode={hero.mediaDisplayMode || 'single'}
+                displayStyle={hero.mediaDisplayStyle || 'default'}
+                autoplay={hero.sliderAutoplay !== false}
+                interval={hero.sliderInterval || 5000}
+                transition={hero.sliderTransition || 'fade'}
+                showDots={hero.sliderShowDots !== false && mediaItems.length > 1}
+                showArrows={hero.sliderShowArrows !== false && mediaItems.length > 1}
+                pauseOnHover={hero.sliderPauseOnHover !== false}
+                mediaFit={hero.mediaFit || 'cover'}
+                mediaRounded={mediaRounded}
+                mediaShadow="none"
+                videoAutoplay={hero.mediaAutoplay !== false}
+                videoLoop={hero.mediaLoop !== false}
+                videoMuted={hero.mediaMuted !== false}
+                videoControls={hero.mediaControls === true}
+                className="w-full aspect-video"
+              />
+            </div>
+          </AnimateOnScroll>
+        </div>
+      );
+    }
 
     return (
       <div className={`flex ${isDualStacked ? 'flex-col' : 'flex-row'} gap-6 items-center justify-center w-full max-w-6xl mx-auto`}>
