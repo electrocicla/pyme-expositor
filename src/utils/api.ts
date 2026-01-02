@@ -118,7 +118,7 @@ export const formatFileSize = (bytes: number): string => {
 
 export const validateFile = (
   file: File,
-  maxSize: number = 100 * 1024 * 1024
+  maxSize: number = 200 * 1024 * 1024
 ): { valid: boolean; error?: string } => {
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']
 
@@ -126,8 +126,9 @@ export const validateFile = (
     return { valid: false, error: 'Unsupported file type' }
   }
 
-  if (file.size > maxSize) {
-    return { valid: false, error: `File too large. Maximum: ${formatFileSize(maxSize)}` }
+  const effectiveMaxSize = file.type.startsWith('image/') ? 10 * 1024 * 1024 : maxSize
+  if (file.size > effectiveMaxSize) {
+    return { valid: false, error: `File too large. Maximum: ${formatFileSize(effectiveMaxSize)}` }
   }
 
   return { valid: true }

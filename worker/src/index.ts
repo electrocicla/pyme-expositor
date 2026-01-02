@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { sign, verify } from 'hono/jwt'
 
 interface Env {
   expositor_db: D1Database
@@ -22,11 +23,6 @@ interface UpdatePayload {
   title?: string
   description?: string
   order_index?: number
-}
-
-interface TokenPayload {
-  user: string
-  exp: number
 }
 
 type HttpStatusCode = 200 | 201 | 400 | 401 | 404 | 500
@@ -53,14 +49,48 @@ app.use('*', cors({
   maxAge: 86400,
 }))
 
-// Simple JWT token generation and verification
-const verifyToken = (token: string, _secret: string): boolean => {
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024
+
+const createUnsignedToken = (user: string, ttlMs: number): string => {
+  const payload = { user, exp: Date.now() + ttlMs }
+  return btoa(JSON.stringify(payload))
+}
+
+const verifyUnsignedToken = (token: string): boolean => {
   try {
-    const decoded = JSON.parse(atob(token)) as TokenPayload
-    return decoded.exp > Date.now()
+    const decoded = JSON.parse(atob(token)) as { exp?: unknown }
+    const exp = decoded.exp
+    return typeof exp === 'number' && exp > Date.now()
   } catch {
     return false
   }
+}
+
+const createAuthToken = async (user: string, secret?: string): Promise<string> => {
+  // Prefer signed JWT when a secret is configured.
+  if (secret && secret.trim().length > 0) {
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    const ttlSeconds = 60 * 60 * 24 * 7
+    return sign({ sub: user, exp: nowSeconds + ttlSeconds }, secret)
+  }
+
+  console.warn('JWT_SECRET is not configured; using unsigned token fallback')
+  return createUnsignedToken(user, 1000 * 60 * 60 * 24)
+}
+
+const verifyAuthToken = async (token: string, secret?: string): Promise<boolean> => {
+  if (secret && secret.trim().length > 0) {
+    try {
+      const payload = await verify(token, secret)
+      const exp = (payload as Record<string, unknown>).exp
+      if (typeof exp !== 'number') return false
+      return exp > Math.floor(Date.now() / 1000)
+    } catch {
+      return false
+    }
+  }
+  return verifyUnsignedToken(token)
 }
 
 // Middleware for protected routes
@@ -76,7 +106,8 @@ const authMiddleware = async (c: Context<{ Bindings: Env }>, next: () => Promise
   }
 
   const token = auth.substring(7)
-  if (!verifyToken(token, c.env.JWT_SECRET)) {
+  const ok = await verifyAuthToken(token, c.env.JWT_SECRET)
+  if (!ok) {
     console.error('Token verification failed')
     return c.json({ error: 'Invalid or expired token' }, 401)
   }
@@ -113,7 +144,7 @@ export function processLoginPayload(payload: unknown): { status: HttpStatusCode;
   const password = String((payload as Record<string, unknown>).password ?? '')
 
   if (password === 'secretpassword') {
-    return { status: 200, body: { token: 'test-token' } }
+    return { status: 200, body: { user: 'owner' } }
   }
 
   return { status: 401, body: { error: 'Invalid credentials' } }
@@ -132,7 +163,14 @@ app.post('/api/login', async (c) => {
     }
 
     const result = processLoginPayload(body)
-    return c.json(result.body, result.status as HttpStatusCode)
+
+    if (result.status !== 200) {
+      return c.json(result.body, result.status as HttpStatusCode)
+    }
+
+    const user = String((result.body as Record<string, unknown>).user ?? 'owner')
+    const token = await createAuthToken(user, c.env.JWT_SECRET)
+    return c.json({ token }, 200)
   } catch (error) {
     console.error('Login error:', error)
     return c.json({ error: 'Failed to process login' }, 500)
@@ -174,6 +212,17 @@ app.post('/api/protected/media', async (c) => {
       return c.json({ error: 'Title is required' }, 400)
     }
 
+    const mediaType = file.type.startsWith('image/') ? 'image' : (file.type.startsWith('video/') ? 'video' : 'unknown')
+    if (mediaType === 'unknown') {
+      return c.json({ error: 'Unsupported file type' }, 400)
+    }
+
+    const maxBytes = mediaType === 'image' ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES
+    if (file.size > maxBytes) {
+      const maxMb = Math.round(maxBytes / (1024 * 1024))
+      return c.json({ error: `File too large. Maximum size is ${maxMb}MB` }, 400)
+    }
+
     const fileKey = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`
     const buffer = await file.arrayBuffer()
 
@@ -183,7 +232,7 @@ app.post('/api/protected/media', async (c) => {
       },
     })
 
-    const mediaType = file.type.startsWith('image/') ? 'image' : 'video'
+    // mediaType computed above
     // Use the worker's media endpoint instead of a placeholder domain
     // This URL will be served by the /media/:key endpoint
     const workerUrl = new URL(c.req.url).origin
@@ -439,7 +488,8 @@ app.post('/api/config', async (c) => {
       return c.json({ error: 'Unauthorized' }, 401)
     }
     const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
+    const ok = await verifyAuthToken(token, c.env.JWT_SECRET)
+    if (!ok) {
       return c.json({ error: 'Invalid or expired token' }, 401)
     }
 
@@ -481,7 +531,8 @@ app.post('/api/config/publish', async (c) => {
       return c.json({ error: 'Unauthorized' }, 401)
     }
     const token = auth.substring(7)
-    if (!verifyToken(token, c.env.JWT_SECRET)) {
+    const ok = await verifyAuthToken(token, c.env.JWT_SECRET)
+    if (!ok) {
       return c.json({ error: 'Invalid or expired token' }, 401)
     }
 

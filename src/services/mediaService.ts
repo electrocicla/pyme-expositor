@@ -65,9 +65,9 @@ export const VALID_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image
 export const VALID_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
 export const ALL_VALID_TYPES = [...VALID_IMAGE_TYPES, ...VALID_VIDEO_TYPES]
 
-export const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
-export const MAX_IMAGE_SIZE = 50 * 1024 * 1024 // 50MB for images
-export const MAX_VIDEO_SIZE = 100 * 1024 * 1024 // 100MB for videos
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB for images
+export const MAX_VIDEO_SIZE = 200 * 1024 * 1024 // 200MB for videos
+export const MAX_FILE_SIZE = MAX_VIDEO_SIZE
 export const ALLOWED_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov'
 
 // Image compression settings

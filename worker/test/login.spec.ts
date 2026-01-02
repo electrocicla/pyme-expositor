@@ -2,6 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { processLoginPayload } from '../src/index'
 import app from '../src/index'
 
+const createTestEnv = (): { JWT_SECRET: string } => ({
+  JWT_SECRET: 'test-secret'
+})
+
 describe('login handler (unit)', () => {
   it('returns 400 for invalid payloads', () => {
     const res = processLoginPayload(null)
@@ -9,10 +13,10 @@ describe('login handler (unit)', () => {
     expect(res.body).toHaveProperty('error')
   })
 
-  it('returns 200 and token for correct password', () => {
+  it('returns 200 and user for correct password', () => {
     const res = processLoginPayload({ password: 'secretpassword' })
     expect(res.status).toBe(200)
-    expect(res.body).toHaveProperty('token')
+    expect(res.body).toHaveProperty('user')
   })
 
   it('returns 401 for wrong password', () => {
@@ -30,7 +34,7 @@ describe('login endpoint (integration)', () => {
       body: JSON.stringify({ password: 'secretpassword' }),
     })
 
-    const response = await app.fetch(request)
+    const response = await app.fetch(request, createTestEnv())
     expect(response.status).toBe(200)
     const json = await response.json()
     expect(json).toHaveProperty('token')
@@ -43,7 +47,7 @@ describe('login endpoint (integration)', () => {
       body: JSON.stringify({ password: 'bad' }),
     })
 
-    const response = await app.fetch(request)
+    const response = await app.fetch(request, createTestEnv())
     expect(response.status).toBe(401)
     const json = await response.json()
     expect(json).toHaveProperty('error')

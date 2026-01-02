@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { Upload, Trash2, AlertCircle } from 'lucide-react'
 import { PanelHeader } from '../shared'
 import { getAuthToken, API_BASE_URL } from '../../../../utils/api'
+import { validateFile, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, formatFileSize } from '../../../../services/mediaService'
 
 interface MediaFile {
   id: number
@@ -29,6 +30,20 @@ export const MediaPanel: React.FC = () => {
       const token = getAuthToken()
       if (!token) {
         setError('Not authenticated. Please log in again.')
+        return
+      }
+
+      const invalidMessages: string[] = []
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i]
+        const validation = validateFile(file)
+        if (!validation.valid) {
+          invalidMessages.push(`${file.name}: ${validation.error || 'Invalid file'}`)
+        }
+      }
+
+      if (invalidMessages.length > 0) {
+        setError(invalidMessages.join('\n'))
         return
       }
       
@@ -146,12 +161,15 @@ export const MediaPanel: React.FC = () => {
             onChange={handleFileSelect}
             className="hidden"
           />
+          <p className="text-xs text-slate-400 mt-2">
+            Images up to {formatFileSize(MAX_IMAGE_SIZE)}. Videos up to {formatFileSize(MAX_VIDEO_SIZE)}.
+          </p>
         </div>
 
         {/* Error Display */}
         {error && (
           <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
@@ -169,7 +187,7 @@ export const MediaPanel: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDelete(file.id)}
-                  className="flex-shrink-0 p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-2"
+                  className="shrink-0 p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-2"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
