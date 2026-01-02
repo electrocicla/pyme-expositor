@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { defaultConfig } from '../types/config';
 import type { SiteConfig } from '../types/config';
 import { api } from '../utils/api';
@@ -23,6 +23,83 @@ interface ConfigContextType {
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
+// State and Reducer for Config History
+interface ConfigState {
+  config: SiteConfig;
+  history: SiteConfig[];
+  historyIndex: number;
+}
+
+type ConfigAction = 
+  | { type: 'SET_CONFIG'; payload: SiteConfig; skipHistory?: boolean }
+  | { type: 'UNDO' }
+  | { type: 'REDO' }
+  | { type: 'RESET_HISTORY'; payload: SiteConfig };
+
+const configReducer = (state: ConfigState, action: ConfigAction): ConfigState => {
+  switch (action.type) {
+    case 'SET_CONFIG': {
+      const newConfig = action.payload;
+      // Deep comparison to avoid unnecessary updates
+      if (JSON.stringify(newConfig) === JSON.stringify(state.config)) {
+        return state;
+      }
+
+      if (action.skipHistory) {
+        return {
+          ...state,
+          config: newConfig,
+          // If we're at the start, update history too
+          history: state.historyIndex === 0 && state.history.length === 1 ? [newConfig] : state.history,
+        };
+      }
+
+      const newHistory = state.history.slice(0, state.historyIndex + 1);
+      newHistory.push(newConfig);
+      
+      // Limit history to 50 states
+      const finalHistory = newHistory.length > 50 ? newHistory.slice(1) : newHistory;
+      
+      return {
+        config: newConfig,
+        history: finalHistory,
+        historyIndex: finalHistory.length - 1,
+      };
+    }
+    case 'UNDO': {
+      if (state.historyIndex > 0) {
+        const newIndex = state.historyIndex - 1;
+        return {
+          ...state,
+          config: state.history[newIndex],
+          historyIndex: newIndex,
+        };
+      }
+      return state;
+    }
+    case 'REDO': {
+      if (state.historyIndex < state.history.length - 1) {
+        const newIndex = state.historyIndex + 1;
+        return {
+          ...state,
+          config: state.history[newIndex],
+          historyIndex: newIndex,
+        };
+      }
+      return state;
+    }
+    case 'RESET_HISTORY': {
+      return {
+        config: action.payload,
+        history: [action.payload],
+        historyIndex: 0,
+      };
+    }
+    default:
+      return state;
+  }
+};
+
 // Deep merge function to combine defaultConfig with loaded config
 const isPlainObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -40,11 +117,14 @@ const deepMerge = <T extends Record<string, unknown>>(target: T, source: Partial
 };
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public' | 'editor' }> = ({ children, mode }) => {
-  // Custom undo/redo state management
-  const [config, setConfigState] = useState<SiteConfig>(defaultConfig);
-  const [history, setHistory] = useState<SiteConfig[]>([defaultConfig]);
-  const [historyIndex, setHistoryIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(mode === 'editor' ? false : true); // Editor starts with default config immediately
+  const [state, dispatch] = useReducer(configReducer, {
+    config: defaultConfig,
+    history: [defaultConfig],
+    historyIndex: 0,
+  });
+
+  const { config, history, historyIndex } = state;
+  const [isLoading, setIsLoading] = useState(mode === 'editor' ? false : true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -54,52 +134,21 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
   const canRedo = historyIndex < history.length - 1;
 
   const undo = useCallback(() => {
-    if (canUndo) {
-      const newIndex = historyIndex - 1;
-      setHistoryIndex(newIndex);
-      setConfigState(history[newIndex]);
-    }
-  }, [canUndo, historyIndex, history]);
+    dispatch({ type: 'UNDO' });
+  }, []);
 
   const redo = useCallback(() => {
-    if (canRedo) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      setConfigState(history[newIndex]);
-    }
-  }, [canRedo, historyIndex, history]);
+    dispatch({ type: 'REDO' });
+  }, []);
 
   const resetHistory = useCallback(() => {
-    setHistory([config]);
-    setHistoryIndex(0);
+    dispatch({ type: 'RESET_HISTORY', payload: config });
   }, [config]);
 
-  // Enhanced setConfig with history tracking
-  const setConfig = useCallback((newConfig: SiteConfig | ((prev: SiteConfig) => SiteConfig)) => {
-    setConfigState(currentConfig => {
-      const resolvedConfig = typeof newConfig === 'function' ? newConfig(currentConfig) : newConfig;
-
-      // Only add to history if the config actually changed
-      if (JSON.stringify(resolvedConfig) !== JSON.stringify(currentConfig)) {
-        setHistory(prevHistory => {
-          // Remove any history after current index (for when we're not at the end)
-          const newHistory = prevHistory.slice(0, historyIndex + 1);
-          // Add the new state
-          newHistory.push(resolvedConfig);
-          // Limit history to 50 states to prevent memory issues
-          if (newHistory.length > 50) {
-            newHistory.shift();
-            setHistoryIndex(newHistory.length - 1);
-          } else {
-            setHistoryIndex(newHistory.length - 1);
-          }
-          return newHistory;
-        });
-      }
-
-      return resolvedConfig;
-    });
-  }, [historyIndex]);
+  // Stable setConfig that doesn't trigger infinite loops
+  const setConfig = useCallback((newConfig: SiteConfig, skipHistory = false) => {
+    dispatch({ type: 'SET_CONFIG', payload: newConfig, skipHistory });
+  }, []);
   
   // Refs for stable references
   const configRef = useRef(config);
@@ -122,46 +171,46 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode; mode: 'public
 
   // Load config on mount
   useEffect(() => {
+    let isMounted = true;
+
     // In editor mode, we start with default config immediately and load draft in background
     if (mode === 'editor') {
       const fetchDraftConfig = async () => {
         try {
           console.warn(`ConfigContext: Fetching draft config in background...`);
           const data = await api.getConfig('draft');
-          if (data && typeof data === 'object') {
+          if (data && typeof data === 'object' && isMounted) {
             const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
             console.warn(`ConfigContext: Loaded draft config:`, mergedConfig);
-            setConfig(mergedConfig);
+            setConfig(mergedConfig, true); // skipHistory = true
           }
         } catch (error) {
           console.warn('ConfigContext: Failed to load draft config, using defaults:', error);
-          // Keep using defaultConfig on error
         }
       };
       fetchDraftConfig();
-      return;
+    } else {
+      // Public mode: load published config and show loading state
+      const fetchConfig = async () => {
+        try {
+          console.warn(`ConfigContext: Fetching published config...`);
+          const data = await api.getConfig('published');
+          if (data && typeof data === 'object' && isMounted) {
+            const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
+            setConfig(mergedConfig, true);
+          }
+        } catch (error) {
+          console.error('Failed to load published config', error);
+        } finally {
+          if (isMounted) setIsLoading(false);
+        }
+      };
+      fetchConfig();
     }
 
-    // Public mode: load published config and show loading state
-    const fetchConfig = async () => {
-      try {
-        console.warn(`ConfigContext: Fetching published config...`);
-        const data = await api.getConfig('published');
-        console.warn(`ConfigContext: Raw published config from API:`, data);
-        // Always merge with defaultConfig to ensure all properties exist
-        if (data && typeof data === 'object') {
-          const mergedConfig = deepMerge(defaultConfig as unknown as Record<string, unknown>, data as unknown as Partial<Record<string, unknown>>) as unknown as SiteConfig;
-          console.warn(`ConfigContext: Merged config:`, mergedConfig);
-          setConfig(mergedConfig);
-        }
-      } catch (error) {
-        console.error('Failed to load published config', error);
-        // Keep using defaultConfig on error
-      } finally {
-        setIsLoading(false);
-      }
+    return () => {
+      isMounted = false;
     };
-    fetchConfig();
   }, [mode, setConfig]);
 
   // Cleanup timeout on unmount
