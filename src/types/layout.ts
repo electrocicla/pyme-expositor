@@ -24,6 +24,21 @@ export type ElementCategory =
   | 'utilities'; // Utility panels
 
 /**
+ * Supported icon IDs (lucide-react) for layout elements.
+ * Kept as a strict union to avoid dynamic icon imports.
+ */
+export type LayoutElementIconId =
+  | 'Monitor'
+  | 'List'
+  | 'Video'
+  | 'Circle'
+  | 'Globe'
+  | 'AudioWaveform'
+  | 'Layers'
+  | 'FolderOpen'
+  | 'Clock';
+
+/**
  * Position within a layout area
  */
 export interface LayoutPosition {
@@ -79,7 +94,7 @@ export interface LayoutElement {
   name: string;
   category: ElementCategory;
   description: string;
-  icon: string;           // lucide-react icon name
+  icon: LayoutElementIconId;
   defaultSize: {
     width: number;
     height: number;
@@ -116,8 +131,8 @@ export interface CustomLayout {
   name: string;
   template: LayoutTemplateType;
   elements: LayoutElementInstance[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
   isPreset?: boolean;
 }
 
@@ -148,7 +163,7 @@ export interface LayoutEditorState {
  * Layout change history for undo/redo
  */
 export interface LayoutHistoryEntry {
-  timestamp: Date;
+  timestamp: string; // ISO string
   layout: CustomLayout;
   action: string;
 }

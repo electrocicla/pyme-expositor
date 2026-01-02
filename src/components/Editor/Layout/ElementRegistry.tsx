@@ -3,7 +3,31 @@
  * Defines all available elements that can be placed in layouts
  */
 
-import type { LayoutElement } from '../../../types/layout';
+import type { LayoutElement, LayoutElementIconId } from '../../../types/layout';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Monitor,
+  List,
+  Video,
+  Circle,
+  Globe,
+  AudioWaveform,
+  Layers,
+  FolderOpen,
+  Clock,
+} from 'lucide-react';
+
+export const LAYOUT_ELEMENT_ICONS: Record<LayoutElementIconId, LucideIcon> = {
+  Monitor,
+  List,
+  Video,
+  Circle,
+  Globe,
+  AudioWaveform,
+  Layers,
+  FolderOpen,
+  Clock,
+};
 
 /**
  * All available layout elements

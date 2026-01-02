@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
 import { X, Lock, Unlock, GripVertical, Box } from 'lucide-react';
 import type { LayoutElementInstance } from '../../../types/layout';
-import { getLayoutElement } from './ElementRegistry';
+import { getLayoutElement, LAYOUT_ELEMENT_ICONS } from './ElementRegistry';
 
 interface ElementInstanceProps {
   instance: LayoutElementInstance;
@@ -36,8 +35,8 @@ export const ElementInstance: React.FC<ElementInstanceProps> = ({
     );
   }
 
-  const getIcon = (iconName: string) => {
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<{ size: number }>;
+  const getIcon = () => {
+    const Icon = LAYOUT_ELEMENT_ICONS[elementDef.icon];
     return Icon ? <Icon size={16} /> : <Box size={16} />;
   };
 
@@ -72,7 +71,7 @@ export const ElementInstance: React.FC<ElementInstanceProps> = ({
             </div>
           )}
           <div className="text-slate-400">
-            {getIcon(elementDef.icon)}
+            {getIcon()}
           </div>
           <span className="text-xs font-medium text-slate-300">
             {elementDef.name}
@@ -95,9 +94,7 @@ export const ElementInstance: React.FC<ElementInstanceProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm(`Remove ${elementDef.name}?`)) {
-                onRemove();
-              }
+              onRemove();
             }}
             className="p-1 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
             aria-label={`Remove ${elementDef.name}`}
@@ -112,7 +109,7 @@ export const ElementInstance: React.FC<ElementInstanceProps> = ({
       <div className="flex-1 p-4 flex items-center justify-center text-slate-500 text-sm">
         <div className="text-center">
           <div className="mb-2">
-            {getIcon(elementDef.icon)}
+            {getIcon()}
           </div>
           <div>{elementDef.name}</div>
         </div>

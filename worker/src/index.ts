@@ -25,6 +25,26 @@ interface UpdatePayload {
   order_index?: number
 }
 
+interface LayoutRowRaw {
+  id: string
+  name: string
+  template: string
+  elements_json: string
+  is_preset: number
+  created_at: string
+  updated_at: string
+}
+
+interface LayoutApiRow {
+  id: string
+  name: string
+  template: string
+  elements: unknown
+  is_preset: number
+  created_at: string
+  updated_at: string
+}
+
 type HttpStatusCode = 200 | 201 | 400 | 401 | 404 | 500
 
 const app = new Hono<{ Bindings: Env }>()
@@ -91,6 +111,55 @@ const verifyAuthToken = async (token: string, secret?: string): Promise<boolean>
     }
   }
   return verifyUnsignedToken(token)
+}
+
+const safeJsonParse = (value: string): unknown => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+const parseLayoutUpsertPayload = (payload: unknown): {
+  ok: true
+  value: { id?: string; name: string; template: string; elements: unknown[]; is_preset: number }
+} | {
+  ok: false
+  error: string
+} => {
+  if (!isRecord(payload)) return { ok: false, error: 'Invalid JSON' }
+
+  const idValue = payload.id
+  const nameValue = payload.name
+  const templateValue = payload.template
+  const elementsValue = payload.elements
+  const isPresetValue = payload.isPreset
+
+  const id = typeof idValue === 'string' && idValue.trim().length > 0 ? idValue.trim() : undefined
+  const name = typeof nameValue === 'string' ? nameValue.trim() : ''
+  const template = typeof templateValue === 'string' ? templateValue.trim() : ''
+
+  if (name.length === 0) return { ok: false, error: 'Name is required' }
+  if (template.length === 0) return { ok: false, error: 'Template is required' }
+  if (!Array.isArray(elementsValue)) return { ok: false, error: 'Elements must be an array' }
+
+  const is_preset = isPresetValue === true ? 1 : 0
+
+  return {
+    ok: true,
+    value: {
+      id,
+      name,
+      template,
+      elements: elementsValue,
+      is_preset,
+    },
+  }
 }
 
 // Middleware for protected routes
@@ -326,6 +395,168 @@ app.delete('/api/protected/media/:id', async (c) => {
   } catch (error) {
     console.error('Delete error:', error)
     return c.json({ error: 'Failed to delete media' }, 500)
+  }
+})
+
+// Layout persistence (D1)
+app.get('/api/protected/layouts', async (c) => {
+  try {
+    const db = c.env.expositor_db
+    const result = await db
+      .prepare('SELECT id, name, template, elements_json, is_preset, created_at, updated_at FROM layouts ORDER BY updated_at DESC')
+      .all<LayoutRowRaw>()
+
+    const rows = (result.results || []).map((row): LayoutApiRow => {
+      const parsed = safeJsonParse(row.elements_json)
+      const elements = Array.isArray(parsed) ? parsed : []
+      return {
+        id: row.id,
+        name: row.name,
+        template: row.template,
+        elements,
+        is_preset: row.is_preset,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }
+    })
+
+    return c.json(rows)
+  } catch (error) {
+    console.error('Error listing layouts:', error)
+    return c.json({ error: 'Failed to list layouts' }, 500)
+  }
+})
+
+app.get('/api/protected/layouts/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.expositor_db
+    const row = await db
+      .prepare('SELECT id, name, template, elements_json, is_preset, created_at, updated_at FROM layouts WHERE id = ?')
+      .bind(id)
+      .first<LayoutRowRaw>()
+
+    if (!row) return c.json({ error: 'Layout not found' }, 404)
+
+    const parsed = safeJsonParse(row.elements_json)
+    const elements = Array.isArray(parsed) ? parsed : []
+
+    const result: LayoutApiRow = {
+      id: row.id,
+      name: row.name,
+      template: row.template,
+      elements,
+      is_preset: row.is_preset,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }
+
+    return c.json(result)
+  } catch (error) {
+    console.error('Error fetching layout:', error)
+    return c.json({ error: 'Failed to fetch layout' }, 500)
+  }
+})
+
+app.post('/api/protected/layouts', async (c) => {
+  try {
+    const payload = await c.req.json()
+    const parsed = parseLayoutUpsertPayload(payload)
+    if (!parsed.ok) return c.json({ error: parsed.error }, 400)
+
+    const db = c.env.expositor_db
+    const id = parsed.value.id ?? crypto.randomUUID()
+    const elementsJson = JSON.stringify(parsed.value.elements)
+
+    await db
+      .prepare(
+        "INSERT INTO layouts (id, name, template, elements_json, is_preset, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))"
+      )
+      .bind(id, parsed.value.name, parsed.value.template, elementsJson, parsed.value.is_preset)
+      .run()
+
+    const row = await db
+      .prepare('SELECT id, name, template, elements_json, is_preset, created_at, updated_at FROM layouts WHERE id = ?')
+      .bind(id)
+      .first<LayoutRowRaw>()
+
+    if (!row) return c.json({ error: 'Failed to create layout' }, 500)
+
+    const elements = parsed.value.elements
+    const result: LayoutApiRow = {
+      id: row.id,
+      name: row.name,
+      template: row.template,
+      elements,
+      is_preset: row.is_preset,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }
+
+    return c.json(result, 201)
+  } catch (error) {
+    console.error('Error creating layout:', error)
+    return c.json({ error: 'Failed to create layout' }, 500)
+  }
+})
+
+app.put('/api/protected/layouts/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const payload = await c.req.json()
+    const parsed = parseLayoutUpsertPayload({ ...(isRecord(payload) ? payload : {}), id })
+    if (!parsed.ok) return c.json({ error: parsed.error }, 400)
+
+    const db = c.env.expositor_db
+    const existing = await db.prepare('SELECT id FROM layouts WHERE id = ?').bind(id).first<{ id: string }>()
+    if (!existing) return c.json({ error: 'Layout not found' }, 404)
+
+    const elementsJson = JSON.stringify(parsed.value.elements)
+
+    await db
+      .prepare(
+        "UPDATE layouts SET name = ?, template = ?, elements_json = ?, is_preset = ?, updated_at = datetime('now') WHERE id = ?"
+      )
+      .bind(parsed.value.name, parsed.value.template, elementsJson, parsed.value.is_preset, id)
+      .run()
+
+    const row = await db
+      .prepare('SELECT id, name, template, elements_json, is_preset, created_at, updated_at FROM layouts WHERE id = ?')
+      .bind(id)
+      .first<LayoutRowRaw>()
+
+    if (!row) return c.json({ error: 'Failed to update layout' }, 500)
+
+    const result: LayoutApiRow = {
+      id: row.id,
+      name: row.name,
+      template: row.template,
+      elements: parsed.value.elements,
+      is_preset: row.is_preset,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }
+
+    return c.json(result)
+  } catch (error) {
+    console.error('Error updating layout:', error)
+    return c.json({ error: 'Failed to update layout' }, 500)
+  }
+})
+
+app.delete('/api/protected/layouts/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.expositor_db
+
+    const existing = await db.prepare('SELECT id FROM layouts WHERE id = ?').bind(id).first<{ id: string }>()
+    if (!existing) return c.json({ error: 'Layout not found' }, 404)
+
+    await db.prepare('DELETE FROM layouts WHERE id = ?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting layout:', error)
+    return c.json({ error: 'Failed to delete layout' }, 500)
   }
 })
 

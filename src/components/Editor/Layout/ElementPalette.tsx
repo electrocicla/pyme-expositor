@@ -4,9 +4,8 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import * as LucideIcons from 'lucide-react';
 import { Search, Box } from 'lucide-react';
-import { LAYOUT_ELEMENTS, getElementCategories } from './ElementRegistry';
+import { LAYOUT_ELEMENTS, getElementCategories, LAYOUT_ELEMENT_ICONS } from './ElementRegistry';
 import type { LayoutElement } from '../../../types/layout';
 import type { DragItem } from '../../../types/drag-drop';
 
@@ -43,8 +42,8 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({ onDragStart }) =
     onDragStart?.(dragItem);
   };
 
-  const getIcon = (iconName: string) => {
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<{ size: number }>;
+  const getIcon = (element: LayoutElement) => {
+    const Icon = LAYOUT_ELEMENT_ICONS[element.icon];
     return Icon ? <Icon size={18} /> : <Box size={18} />;
   };
 
@@ -143,7 +142,7 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({ onDragStart }) =
 
               {/* Icon */}
               <div className="flex-shrink-0 p-2 rounded bg-slate-900 text-purple-400">
-                {getIcon(element.icon)}
+                {getIcon(element)}
               </div>
 
               {/* Info */}

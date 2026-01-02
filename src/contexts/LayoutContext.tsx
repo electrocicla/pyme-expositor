@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 import type {
   LayoutTemplateType,
   CustomLayout,
@@ -9,6 +9,8 @@ import type {
   LayoutPosition,
 } from '../types/layout';
 import { getDefaultTemplate } from '../components/Editor/Layout/LayoutTemplates';
+import { layoutService } from '../services/layoutService';
+import { getAuthToken } from '../utils/api';
 
 interface LayoutContextType extends LayoutEditorState {
   // Template operations
@@ -25,10 +27,10 @@ interface LayoutContextType extends LayoutEditorState {
   
   // Layout operations
   saveLayout: (name: string) => Promise<void>;
-  loadLayout: (layoutId: string) => void;
-  deleteLayout: (layoutId: string) => void;
+  loadLayout: (layoutId: string) => Promise<void>;
+  deleteLayout: (layoutId: string) => Promise<void>;
   resetLayout: () => void;
-  duplicateLayout: (layoutId: string) => void;
+  duplicateLayout: (layoutId: string) => Promise<void>;
   
   // Grid operations
   toggleGrid: () => void;
@@ -66,6 +68,8 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   });
 
+  const savedLayoutIds = useMemo(() => new Set(state.savedLayouts.map(l => l.id)), [state.savedLayouts]);
+
   // History management
   const [history, setHistory] = useState<CustomLayout[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -88,7 +92,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         ...prev.currentLayout,
         template: templateId,
         elements: [], // Clear elements when changing template
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       } : null,
     }));
   }, []);
@@ -115,14 +119,14 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = currentLayout ? {
         ...currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       } : {
         id: `layout-${Date.now()}`,
         name: 'Untitled Layout',
         template: prev.activeTemplate,
         elements,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       addToHistory(updatedLayout);
@@ -142,7 +146,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = {
         ...prev.currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
 
       addToHistory(updatedLayout);
@@ -170,7 +174,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = {
         ...prev.currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
 
       addToHistory(updatedLayout);
@@ -193,7 +197,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = {
         ...prev.currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
 
       return {
@@ -224,7 +228,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = {
         ...prev.currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
 
       return {
@@ -245,7 +249,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const updatedLayout: CustomLayout = {
         ...prev.currentLayout,
         elements,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
 
       return {
@@ -262,35 +266,66 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const layoutToSave: CustomLayout = {
       ...state.currentLayout,
       name,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
 
-    // TODO: Integrate with API service
-    setState(prev => ({
-      ...prev,
-      savedLayouts: [...prev.savedLayouts, layoutToSave],
-      currentLayout: layoutToSave,
-    }));
-  }, [state.currentLayout]);
+    try {
+      const shouldUpdate = savedLayoutIds.has(layoutToSave.id);
+      const persisted = shouldUpdate
+        ? await layoutService.update(layoutToSave.id, {
+            name: layoutToSave.name,
+            template: layoutToSave.template,
+            elements: layoutToSave.elements,
+            isPreset: layoutToSave.isPreset,
+          })
+        : await layoutService.create({
+            id: layoutToSave.id,
+            name: layoutToSave.name,
+            template: layoutToSave.template,
+            elements: layoutToSave.elements,
+            isPreset: layoutToSave.isPreset,
+          });
 
-  const loadLayout = useCallback((layoutId: string) => {
-    setState(prev => {
-      const layout = prev.savedLayouts.find(l => l.id === layoutId);
-      if (!layout) return prev;
+      setState(prev => {
+        const others = prev.savedLayouts.filter(l => l.id !== persisted.id);
+        return {
+          ...prev,
+          savedLayouts: [persisted, ...others],
+          currentLayout: persisted,
+          activeTemplate: persisted.template,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to save layout:', error);
+    }
+  }, [savedLayoutIds, state.currentLayout]);
 
-      return {
+  const loadLayout = useCallback(async (layoutId: string) => {
+    try {
+      const layout = await layoutService.get(layoutId);
+      setState(prev => ({
         ...prev,
         currentLayout: layout,
         activeTemplate: layout.template,
-      };
-    });
+      }));
+    } catch (error) {
+      console.error('Failed to load layout:', error);
+    }
   }, []);
 
-  const deleteLayout = useCallback((layoutId: string) => {
+  const deleteLayout = useCallback(async (layoutId: string) => {
+    try {
+      await layoutService.remove(layoutId);
+    } catch (error) {
+      console.error('Failed to delete layout:', error);
+      return;
+    }
+
     setState(prev => ({
       ...prev,
       savedLayouts: prev.savedLayouts.filter(l => l.id !== layoutId),
       currentLayout: prev.currentLayout?.id === layoutId ? null : prev.currentLayout,
+      selectedElement: prev.selectedElement,
     }));
   }, []);
 
@@ -305,23 +340,45 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const duplicateLayout = useCallback((layoutId: string) => {
-    setState(prev => {
-      const layout = prev.savedLayouts.find(l => l.id === layoutId);
-      if (!layout) return prev;
+    return (async () => {
+      const source = state.savedLayouts.find(l => l.id === layoutId);
+      if (!source) return;
 
-      const duplicated: CustomLayout = {
-        ...layout,
-        id: `layout-${Date.now()}`,
-        name: `${layout.name} (Copy)`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      try {
+        const created = await layoutService.create({
+          name: `${source.name} (Copy)`,
+          template: source.template,
+          elements: source.elements,
+          isPreset: source.isPreset,
+        });
+        setState(prev => ({
+          ...prev,
+          savedLayouts: [created, ...prev.savedLayouts],
+        }));
+      } catch (error) {
+        console.error('Failed to duplicate layout:', error);
+      }
+    })();
+  }, [state.savedLayouts]);
 
-      return {
-        ...prev,
-        savedLayouts: [...prev.savedLayouts, duplicated],
-      };
-    });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!getAuthToken()) return;
+      try {
+        const layouts = await layoutService.list();
+        if (cancelled) return;
+        setState(prev => ({
+          ...prev,
+          savedLayouts: layouts,
+        }));
+      } catch (error) {
+        console.warn('Failed to load saved layouts:', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Grid operations
