@@ -8,6 +8,7 @@ import { Layout, Check } from 'lucide-react';
 import { LAYOUT_TEMPLATES } from './LayoutTemplates';
 import { useLayout } from '../../../contexts/LayoutContext';
 import type { LayoutTemplateType } from '../../../types/layout';
+import { SavedLayoutsPanel } from './SavedLayoutsPanel';
 
 export const LayoutSelector: React.FC = () => {
   const { activeTemplate, selectTemplate } = useLayout();
@@ -19,7 +20,8 @@ export const LayoutSelector: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 space-y-4">
       <div className="flex items-center gap-2">
         <Layout size={18} className="text-blue-400" />
         <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
@@ -86,6 +88,9 @@ export const LayoutSelector: React.FC = () => {
           Select a layout template to organize your workspace. You can drag and drop elements into the layout areas.
         </p>
       </div>
+      </div>
+
+      <SavedLayoutsPanel />
     </div>
   );
 };

@@ -6,6 +6,7 @@ export { LayoutSelector } from './LayoutSelector';
 export { ElementPalette } from './ElementPalette';
 export { LayoutCanvas } from './LayoutCanvas';
 export { LayoutToolbar } from './LayoutToolbar';
+export { SavedLayoutsPanel } from './SavedLayoutsPanel';
 export { DropZone } from './DropZone';
 export { ElementInstance } from './ElementInstance';
 export { LAYOUT_TEMPLATES, getLayoutTemplate, getDefaultTemplate } from './LayoutTemplates';

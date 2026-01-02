@@ -25,7 +25,6 @@ export const LayoutToolbar: React.FC = () => {
     toggleGrid,
     toggleGridSnap,
     resetLayout,
-    saveLayout,
     setMode,
     undo,
     redo,
@@ -34,21 +33,16 @@ export const LayoutToolbar: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    const layoutName = window.prompt('Enter layout name:');
-    if (!layoutName) return;
-
     setIsSaving(true);
     try {
-      await saveLayout(layoutName);
+      // Saving is handled in the left sidebar (Layouts tab) to avoid modal prompts.
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleReset = () => {
-    if (window.confirm('Reset layout? This will remove all elements.')) {
-      resetLayout();
-    }
+    resetLayout();
   };
 
   return (
@@ -151,10 +145,10 @@ export const LayoutToolbar: React.FC = () => {
             onClick={handleSave}
             disabled={isSaving}
             className="flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium text-slate-400 hover:text-slate-200 disabled:opacity-50 transition-colors"
-            aria-label="Save layout"
+            aria-label="Open saved layouts panel"
           >
             <Save size={16} />
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? 'Saving…' : 'Save'}
           </button>
           <button
             onClick={handleReset}
