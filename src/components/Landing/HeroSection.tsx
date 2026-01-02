@@ -95,6 +95,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
   // Get height class
   const getHeightClass = (): string => {
+    if (hero.template === 'full-screen') return heightClasses['full'];
     return heightClasses[hero.heroHeight || 'lg'];
   };
 
@@ -124,7 +125,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   }, [hero.mediaUrl, hero.mediaType, hero.mediaItems]);
 
   // Check if this is a background media template
-  const isBackgroundMediaTemplate = hero.template === 'media-background' || hero.template === 'media-overlay';
+  const isBackgroundMediaTemplate = hero.template === 'media-background' || hero.template === 'media-overlay' || hero.template === 'full-screen';
 
   // Render background media
   const renderBackgroundMedia = () => {
